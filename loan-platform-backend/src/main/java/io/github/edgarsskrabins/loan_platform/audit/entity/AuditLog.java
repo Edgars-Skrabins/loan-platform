@@ -20,14 +20,14 @@ public class AuditLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String action;
 
     @CreationTimestamp
-    @Column(name = "timestamp", nullable = false,updatable = false)
+    @Column(name = "timestamp", nullable = false, updatable = false)
     private Instant timestamp;
 }
