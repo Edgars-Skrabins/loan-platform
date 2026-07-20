@@ -2,6 +2,7 @@ package io.github.edgarsskrabins.loan_platform.security;
 
 import io.github.edgarsskrabins.loan_platform.user.entity.User;
 import io.github.edgarsskrabins.loan_platform.user.repository.UserRepository;
+import io.github.edgarsskrabins.loan_platform.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CurrentUserService {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     public User getCurrentUser() {
         String email = SecurityContextHolder
@@ -18,8 +19,6 @@ public class CurrentUserService {
                 .getAuthentication()
                 .getName();
 
-        return userRepository
-                .findByEmail(email)
-                .orElseThrow();
+        return userService.getUserByEmail(email);
     }
 }
