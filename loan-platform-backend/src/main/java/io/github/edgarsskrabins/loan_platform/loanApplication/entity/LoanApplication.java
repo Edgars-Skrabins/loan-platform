@@ -1,4 +1,4 @@
-package io.github.edgarsskrabins.loan_platform.loan.entity;
+package io.github.edgarsskrabins.loan_platform.loanApplication.entity;
 
 import io.github.edgarsskrabins.loan_platform.customer.entity.CustomerProfile;
 import jakarta.persistence.*;

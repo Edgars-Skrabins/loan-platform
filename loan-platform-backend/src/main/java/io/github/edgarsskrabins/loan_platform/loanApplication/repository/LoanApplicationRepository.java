@@ -1,7 +1,7 @@
-package io.github.edgarsskrabins.loan_platform.loan.repository;
+package io.github.edgarsskrabins.loan_platform.loanApplication.repository;
 
-import io.github.edgarsskrabins.loan_platform.loan.entity.LoanApplication;
-import io.github.edgarsskrabins.loan_platform.loan.entity.LoanStatus;
+import io.github.edgarsskrabins.loan_platform.loanApplication.entity.LoanApplication;
+import io.github.edgarsskrabins.loan_platform.loanApplication.entity.LoanStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
