@@ -4,9 +4,11 @@ import io.github.edgarsskrabins.loan_platform.customer.entity.CustomerProfile;
 import io.github.edgarsskrabins.loan_platform.customer.repository.CustomerProfileRepository;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationResponse;
+import io.github.edgarsskrabins.loan_platform.loanApplication.dto.deleteLoanApplication.DeleteLoanApplicationRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusResponse;
 import io.github.edgarsskrabins.loan_platform.loanApplication.entity.LoanApplication;
+import io.github.edgarsskrabins.loan_platform.loanApplication.entity.LoanStatus;
 import io.github.edgarsskrabins.loan_platform.loanApplication.repository.LoanApplicationRepository;
 import io.github.edgarsskrabins.loan_platform.security.CurrentUserService;
 import io.github.edgarsskrabins.loan_platform.user.entity.Role;
@@ -53,5 +55,15 @@ public class LoanApplicationService {
         return new UpdateLoanApplicationStatusResponse(
                 savedLoanApplication.getId(),
                 savedLoanApplication.getStatus());
+    }
+
+    public void deleteLoanApplication(DeleteLoanApplicationRequest request) {
+        LoanApplication loanApplication = loanApplicationRepository.findById(request.id()).orElseThrow();
+
+        if(loanApplication.getStatus() != LoanStatus.PENDING) {
+            throw new RuntimeException("Only pending loan applications can be deleted");
+        }
+
+        loanApplicationRepository.deleteById(request.id());
     }
 }
