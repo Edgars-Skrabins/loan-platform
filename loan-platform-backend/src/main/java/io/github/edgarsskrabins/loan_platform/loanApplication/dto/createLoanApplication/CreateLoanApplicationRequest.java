@@ -1,4 +1,4 @@
-package io.github.edgarsskrabins.loan_platform.loanApplication.dto;
+package io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;

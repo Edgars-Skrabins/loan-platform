@@ -1,7 +1,9 @@
 package io.github.edgarsskrabins.loan_platform.loanApplication.controller;
 
-import io.github.edgarsskrabins.loan_platform.loanApplication.dto.CreateLoanApplicationRequest;
-import io.github.edgarsskrabins.loan_platform.loanApplication.dto.CreateLoanApplicationResponse;
+import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationRequest;
+import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationResponse;
+import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusRequest;
+import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusResponse;
 import io.github.edgarsskrabins.loan_platform.loanApplication.service.LoanApplicationService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,4 +23,11 @@ public class LoanApplicationController {
     ) {
         return loanApplicationService.createLoanApplication(request);
     }
+
+    public UpdateLoanApplicationStatusResponse updateLoanApplicationStatus(
+            @RequestBody @Valid UpdateLoanApplicationStatusRequest request
+    ) {
+        return loanApplicationService.updateLoanApplicationStatus(request);
+    }
+
 }
