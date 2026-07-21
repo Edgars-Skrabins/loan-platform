@@ -1,7 +1,9 @@
 package io.github.edgarsskrabins.loan_platform.auth.controller;
 
-import io.github.edgarsskrabins.loan_platform.auth.dto.RegisterRequest;
-import io.github.edgarsskrabins.loan_platform.auth.dto.RegisterResponse;
+import io.github.edgarsskrabins.loan_platform.auth.dto.login.LoginRequest;
+import io.github.edgarsskrabins.loan_platform.auth.dto.login.LoginResponse;
+import io.github.edgarsskrabins.loan_platform.auth.dto.register.RegisterRequest;
+import io.github.edgarsskrabins.loan_platform.auth.dto.register.RegisterResponse;
 import io.github.edgarsskrabins.loan_platform.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,5 +21,12 @@ public class AuthController {
             @Valid @RequestBody RegisterRequest request
     ) {
         return authService.register(request);
+    }
+
+    @PostMapping("/login")
+    public LoginResponse login(
+            @Valid @RequestBody LoginRequest request
+    ){
+        return authService.login(request);
     }
 }

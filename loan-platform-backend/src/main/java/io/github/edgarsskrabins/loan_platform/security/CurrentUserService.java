@@ -1,7 +1,6 @@
 package io.github.edgarsskrabins.loan_platform.security;
 
 import io.github.edgarsskrabins.loan_platform.user.entity.User;
-import io.github.edgarsskrabins.loan_platform.user.repository.UserRepository;
 import io.github.edgarsskrabins.loan_platform.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;

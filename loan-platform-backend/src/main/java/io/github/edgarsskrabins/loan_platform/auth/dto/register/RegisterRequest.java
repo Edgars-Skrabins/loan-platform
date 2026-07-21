@@ -1,4 +1,4 @@
-package io.github.edgarsskrabins.loan_platform.auth.dto;
+package io.github.edgarsskrabins.loan_platform.auth.dto.register;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
