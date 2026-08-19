@@ -1,23 +1,29 @@
 package io.github.edgarsskrabins.loan_platform.security.jwt;
 
+import io.github.edgarsskrabins.loan_platform.exceptions.UserNotFoundException;
 import io.github.edgarsskrabins.loan_platform.user.entity.User;
 import io.github.edgarsskrabins.loan_platform.user.service.UserService;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtService jwtService;
     private final UserService userService;
@@ -31,17 +37,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
+        if (authHeader != null
+                && authHeader.startsWith(BEARER_PREFIX)
+                && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+            String token = authHeader.substring(BEARER_PREFIX.length());
+            resolveAuthentication(token, request).ifPresent(
+                    SecurityContextHolder.getContext()::setAuthentication
+            );
         }
 
-        String token = authHeader.substring(7);
+        filterChain.doFilter(request, response);
+    }
 
-        String email = jwtService.extractUsername(token);
-
-        if (email != null &&
-                SecurityContextHolder.getContext().getAuthentication() == null) {
+    private Optional<Authentication> resolveAuthentication(String token, HttpServletRequest request) {
+        try {
+            String email = jwtService.extractUsername(token);
+            if (email == null) {
+                return Optional.empty();
+            }
 
             User user = userService.getUserByEmail(email);
 
@@ -49,13 +63,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     new UsernamePasswordAuthenticationToken(
                             user,
                             null,
-                            List.of()
+                            user.getAuthorities()
                     );
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            SecurityContextHolder.getContext()
-                    .setAuthentication(authentication);
+            return Optional.of(authentication);
+        } catch (JwtException | UserNotFoundException exception) {
+            return Optional.empty();
         }
-
-        filterChain.doFilter(request, response);
     }
 }
