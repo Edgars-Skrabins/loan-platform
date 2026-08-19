@@ -110,11 +110,7 @@ class JwtServiceTest {
     }
 
     @Test
-    @Disabled("""
-            BUG: JwtService generates a fresh random HS256 key per instance (field initialiser),
-            so every restart silently invalidates all outstanding tokens and two app instances
-            cannot validate each other's tokens. The commented-out constructor that reads
-            ${jwt.secret} is the fix. Remove @Disabled once the key comes from configuration.""")
+    @Disabled("Pending: the signing key is generated per instance instead of read from configuration")
     @DisplayName("the signing key is stable across instances so tokens survive a restart")
     void signingKeyIsStableAcrossInstances() {
         String token = new JwtService().generateToken(user("ada@example.com"));

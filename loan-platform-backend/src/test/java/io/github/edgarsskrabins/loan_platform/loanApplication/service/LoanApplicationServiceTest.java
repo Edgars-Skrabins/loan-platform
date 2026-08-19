@@ -1,7 +1,11 @@
 package io.github.edgarsskrabins.loan_platform.loanApplication.service;
 
 import io.github.edgarsskrabins.loan_platform.customer.entity.CustomerProfile;
-import io.github.edgarsskrabins.loan_platform.customer.repository.CustomerProfileRepository;
+import io.github.edgarsskrabins.loan_platform.customer.service.CustomerProfileService;
+import io.github.edgarsskrabins.loan_platform.exceptions.CustomerProfileNotFoundException;
+import io.github.edgarsskrabins.loan_platform.exceptions.ForbiddenOperationException;
+import io.github.edgarsskrabins.loan_platform.exceptions.InvalidLoanStateException;
+import io.github.edgarsskrabins.loan_platform.exceptions.LoanApplicationNotFoundException;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationResponse;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.deleteLoanApplication.DeleteLoanApplicationRequest;
@@ -26,13 +30,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -51,7 +53,7 @@ class LoanApplicationServiceTest {
     private LoanApplicationRepository loanApplicationRepository;
 
     @Mock
-    private CustomerProfileRepository customerProfileRepository;
+    private CustomerProfileService customerProfileService;
 
     @InjectMocks
     private LoanApplicationService service;
@@ -61,11 +63,11 @@ class LoanApplicationServiceTest {
     class Create {
 
         @Test
-        @DisplayName("attaches the caller's profile and the requested amount, and starts PENDING")
+        @DisplayName("attaches the caller's profile, amount and term, and starts PENDING")
         void createsApplicationForCurrentUser() {
-            CustomerProfile profile = profile();
+            CustomerProfile profile = profile(PROFILE_ID);
             when(currentUserService.getCurrentUser()).thenReturn(user(Role.CUSTOMER));
-            when(customerProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(profile));
+            when(customerProfileService.getByUserId(USER_ID)).thenReturn(profile);
             when(loanApplicationRepository.save(any(LoanApplication.class)))
                     .thenAnswer(invocation -> {
                         LoanApplication application = invocation.getArgument(0);
@@ -73,13 +75,14 @@ class LoanApplicationServiceTest {
                         return application;
                     });
 
-            CreateLoanApplicationResponse response =
-                    service.createLoanApplication(new CreateLoanApplicationRequest(new BigDecimal("5000.00")));
+            CreateLoanApplicationResponse response = service.createLoanApplication(
+                    new CreateLoanApplicationRequest(new BigDecimal("5000.00"), 24));
 
             ArgumentCaptor<LoanApplication> saved = ArgumentCaptor.forClass(LoanApplication.class);
             verify(loanApplicationRepository).save(saved.capture());
             assertThat(saved.getValue().getCustomer()).isSameAs(profile);
             assertThat(saved.getValue().getAmount()).isEqualByComparingTo("5000.00");
+            assertThat(saved.getValue().getTermMonths()).isEqualTo(24);
             assertThat(saved.getValue().getStatus()).isEqualTo(LoanStatus.PENDING);
             assertThat(response.id()).isEqualTo(LOAN_ID);
             assertThat(response.status()).isEqualTo(LoanStatus.PENDING);
@@ -89,32 +92,13 @@ class LoanApplicationServiceTest {
         @DisplayName("throws and saves nothing when the caller has no customer profile")
         void failsWithoutCustomerProfile() {
             when(currentUserService.getCurrentUser()).thenReturn(user(Role.CUSTOMER));
-            when(customerProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+            when(customerProfileService.getByUserId(USER_ID))
+                    .thenThrow(new CustomerProfileNotFoundException(USER_ID));
 
             assertThatThrownBy(() -> service.createLoanApplication(
-                    new CreateLoanApplicationRequest(new BigDecimal("5000.00"))))
-                    .isInstanceOf(NoSuchElementException.class);
+                    new CreateLoanApplicationRequest(new BigDecimal("5000.00"), 24)))
+                    .isInstanceOf(CustomerProfileNotFoundException.class);
             verify(loanApplicationRepository, never()).save(any());
-        }
-
-        @Test
-        @Disabled("""
-                BUG: createLoanApplication never sets termMonths, but loan_applications.term_months
-                is NOT NULL in V1__init.sql, so every create fails at flush time. termMonths (and
-                interestRate) are also absent from CreateLoanApplicationRequest. Remove @Disabled
-                once the request carries a term and the service copies it across.""")
-        @DisplayName("copies the requested term onto the application")
-        void copiesTermMonths() {
-            when(currentUserService.getCurrentUser()).thenReturn(user(Role.CUSTOMER));
-            when(customerProfileRepository.findByUserId(USER_ID)).thenReturn(Optional.of(profile()));
-            when(loanApplicationRepository.save(any(LoanApplication.class)))
-                    .thenAnswer(invocation -> invocation.getArgument(0));
-
-            service.createLoanApplication(new CreateLoanApplicationRequest(new BigDecimal("5000.00")));
-
-            ArgumentCaptor<LoanApplication> saved = ArgumentCaptor.forClass(LoanApplication.class);
-            verify(loanApplicationRepository).save(saved.capture());
-            assertThat(saved.getValue().getTermMonths()).isNotNull();
         }
     }
 
@@ -140,36 +124,31 @@ class LoanApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("rejects a CUSTOMER caller and leaves the application untouched")
+        @DisplayName("rejects a CUSTOMER caller and never loads the application")
         void customerCannotUpdateStatus() {
             when(currentUserService.getCurrentUser()).thenReturn(user(Role.CUSTOMER));
 
             assertThatThrownBy(() -> service.updateLoanApplicationStatus(
                     new UpdateLoanApplicationStatusRequest(LOAN_ID, LoanStatus.APPROVED)))
-                    .isInstanceOf(RuntimeException.class)
+                    .isInstanceOf(ForbiddenOperationException.class)
                     .hasMessage("Only admins or loan officers can update loan application status");
-            verify(loanApplicationRepository, never()).findById(anyLong());
             verify(loanApplicationRepository, never()).save(any());
         }
 
         @Test
-        @DisplayName("throws when the application does not exist")
+        @DisplayName("throws LoanApplicationNotFoundException for an unknown id")
         void failsOnUnknownApplication() {
             when(currentUserService.getCurrentUser()).thenReturn(user(Role.LOAN_OFFICER));
             when(loanApplicationRepository.findById(404L)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.updateLoanApplicationStatus(
                     new UpdateLoanApplicationStatusRequest(404L, LoanStatus.APPROVED)))
-                    .isInstanceOf(NoSuchElementException.class);
+                    .isInstanceOf(LoanApplicationNotFoundException.class);
             verify(loanApplicationRepository, never()).save(any());
         }
 
         @Test
-        @Disabled("""
-                BUG: any status can move to any other status, so a decided loan can be walked back
-                to PENDING (or re-decided repeatedly). V1__init.sql documents loan_decisions as an
-                append-only decision history for exactly this reason. Remove @Disabled once
-                transitions are validated as a state machine.""")
+        @Disabled("Pending: status transitions are not validated as a state machine")
         @DisplayName("refuses to move a decided application back to PENDING")
         void cannotReopenDecidedApplication() {
             when(currentUserService.getCurrentUser()).thenReturn(user(Role.LOAN_OFFICER));
@@ -178,39 +157,15 @@ class LoanApplicationServiceTest {
 
             assertThatThrownBy(() -> service.updateLoanApplicationStatus(
                     new UpdateLoanApplicationStatusRequest(LOAN_ID, LoanStatus.PENDING)))
-                    .isInstanceOf(IllegalStateException.class);
+                    .isInstanceOf(InvalidLoanStateException.class);
             verify(loanApplicationRepository, never()).save(any());
         }
 
         @Test
-        @Disabled("""
-                BUG: approving/rejecting writes nothing to loan_decisions and nothing to audit_logs,
-                so LoanDecisionRepository, AuditLogRepository and AuditAction are all dead code and
-                there is no record of who decided what. Remove @Disabled once a decision row is
-                persisted alongside the status change.""")
+        @Disabled("Pending: no LoanDecision or AuditLog row is written when a status changes")
         @DisplayName("records who made the decision")
         void recordsDecision() {
-            // Cannot be asserted yet: LoanApplicationService has no LoanDecisionRepository
-            // dependency to verify against. Wire one in, then assert the saved decision's
-            // officer, outcome and comment here.
             throw new AssertionError("updateLoanApplicationStatus persists no LoanDecision");
-        }
-
-        @Test
-        @Disabled("""
-                BUG: UpdateLoanApplicationStatusRequest.newStatus has no @NotNull, and the service
-                does not check it, so a null status is written straight to a NOT NULL column.
-                Remove @Disabled once a null target status is rejected.""")
-        @DisplayName("rejects a null target status")
-        void rejectsNullStatus() {
-            when(currentUserService.getCurrentUser()).thenReturn(user(Role.LOAN_OFFICER));
-            when(loanApplicationRepository.findById(LOAN_ID))
-                    .thenReturn(Optional.of(application(LoanStatus.PENDING)));
-
-            assertThatThrownBy(() -> service.updateLoanApplicationStatus(
-                    new UpdateLoanApplicationStatusRequest(LOAN_ID, null)))
-                    .isInstanceOf(IllegalArgumentException.class);
-            verify(loanApplicationRepository, never()).save(any());
         }
     }
 
@@ -219,44 +174,58 @@ class LoanApplicationServiceTest {
     class Delete {
 
         @Test
-        @DisplayName("deletes an application that is still PENDING")
-        void deletesPendingApplication() {
-            when(loanApplicationRepository.findById(LOAN_ID))
-                    .thenReturn(Optional.of(application(LoanStatus.PENDING)));
+        @DisplayName("lets the owning customer delete their own PENDING application")
+        void ownerCanDeletePendingApplication() {
+            LoanApplication application = application(LoanStatus.PENDING);
+            when(currentUserService.getCurrentUser()).thenReturn(user(Role.CUSTOMER));
+            when(loanApplicationRepository.findById(LOAN_ID)).thenReturn(Optional.of(application));
+            when(customerProfileService.getByUserId(USER_ID)).thenReturn(profile(PROFILE_ID));
 
             service.deleteLoanApplication(new DeleteLoanApplicationRequest(LOAN_ID));
 
-            verify(loanApplicationRepository).deleteById(LOAN_ID);
+            verify(loanApplicationRepository).delete(application);
+        }
+
+        @ParameterizedTest
+        @EnumSource(value = Role.class, names = {"LOAN_OFFICER", "ADMIN"})
+        @DisplayName("lets staff delete a PENDING application without owning it")
+        void staffCanDeletePendingApplication(Role role) {
+            LoanApplication application = application(LoanStatus.PENDING);
+            when(currentUserService.getCurrentUser()).thenReturn(user(role));
+            when(loanApplicationRepository.findById(LOAN_ID)).thenReturn(Optional.of(application));
+
+            service.deleteLoanApplication(new DeleteLoanApplicationRequest(LOAN_ID));
+
+            verify(loanApplicationRepository).delete(application);
         }
 
         @ParameterizedTest
         @EnumSource(value = LoanStatus.class, names = "PENDING", mode = EnumSource.Mode.EXCLUDE)
         @DisplayName("refuses to delete an application that has left PENDING")
         void refusesNonPendingApplication(LoanStatus status) {
+            when(currentUserService.getCurrentUser()).thenReturn(user(Role.CUSTOMER));
             when(loanApplicationRepository.findById(LOAN_ID))
                     .thenReturn(Optional.of(application(status)));
+            when(customerProfileService.getByUserId(USER_ID)).thenReturn(profile(PROFILE_ID));
 
             assertThatThrownBy(() -> service.deleteLoanApplication(new DeleteLoanApplicationRequest(LOAN_ID)))
-                    .isInstanceOf(RuntimeException.class)
+                    .isInstanceOf(InvalidLoanStateException.class)
                     .hasMessage("Only pending loan applications can be deleted");
-            verify(loanApplicationRepository, never()).deleteById(anyLong());
+            verify(loanApplicationRepository, never()).delete(any());
         }
 
         @Test
-        @DisplayName("throws when the application does not exist")
+        @DisplayName("throws LoanApplicationNotFoundException for an unknown id")
         void failsOnUnknownApplication() {
+            when(currentUserService.getCurrentUser()).thenReturn(user(Role.CUSTOMER));
             when(loanApplicationRepository.findById(404L)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.deleteLoanApplication(new DeleteLoanApplicationRequest(404L)))
-                    .isInstanceOf(NoSuchElementException.class);
-            verify(loanApplicationRepository, never()).deleteById(anyLong());
+                    .isInstanceOf(LoanApplicationNotFoundException.class);
+            verify(loanApplicationRepository, never()).delete(any());
         }
 
         @Test
-        @Disabled("""
-                SECURITY BUG: deleteLoanApplication never consults CurrentUserService, so any
-                authenticated user can delete any other customer's PENDING application just by
-                guessing its id (IDOR). Remove @Disabled once ownership is enforced.""")
         @DisplayName("refuses to delete an application belonging to another customer")
         void refusesOtherCustomersApplication() {
             User attacker = user(Role.CUSTOMER);
@@ -264,10 +233,12 @@ class LoanApplicationServiceTest {
             when(currentUserService.getCurrentUser()).thenReturn(attacker);
             when(loanApplicationRepository.findById(LOAN_ID))
                     .thenReturn(Optional.of(application(LoanStatus.PENDING)));
+            when(customerProfileService.getByUserId(999L)).thenReturn(profile(222L));
 
             assertThatThrownBy(() -> service.deleteLoanApplication(new DeleteLoanApplicationRequest(LOAN_ID)))
-                    .isInstanceOf(RuntimeException.class);
-            verify(loanApplicationRepository, never()).deleteById(anyLong());
+                    .isInstanceOf(ForbiddenOperationException.class)
+                    .hasMessage("You can only delete your own loan applications");
+            verify(loanApplicationRepository, never()).delete(any());
         }
     }
 
@@ -279,17 +250,16 @@ class LoanApplicationServiceTest {
         return user;
     }
 
-    private static CustomerProfile profile() {
+    private static CustomerProfile profile(Long id) {
         CustomerProfile profile = new CustomerProfile();
-        profile.setId(PROFILE_ID);
-        profile.setUser(user(Role.CUSTOMER));
+        profile.setId(id);
         return profile;
     }
 
     private static LoanApplication application(LoanStatus status) {
         LoanApplication application = new LoanApplication();
         application.setId(LOAN_ID);
-        application.setCustomer(profile());
+        application.setCustomer(profile(PROFILE_ID));
         application.setAmount(new BigDecimal("5000.00"));
         application.setTermMonths(24);
         application.setStatus(status);

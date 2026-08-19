@@ -47,6 +47,16 @@ class UserServiceTest {
     }
 
     @Test
+    @DisplayName("existsByEmail delegates to the repository")
+    void existsByEmailDelegatesToRepository() {
+        when(userRepository.existsByEmail("ada@example.com")).thenReturn(true);
+        when(userRepository.existsByEmail("nobody@example.com")).thenReturn(false);
+
+        assertThat(userService.existsByEmail("ada@example.com")).isTrue();
+        assertThat(userService.existsByEmail("nobody@example.com")).isFalse();
+    }
+
+    @Test
     @DisplayName("save delegates to the repository and returns the persisted user")
     void saveDelegatesToRepository() {
         User user = user("ada@example.com");

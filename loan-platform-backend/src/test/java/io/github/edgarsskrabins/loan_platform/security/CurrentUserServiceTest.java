@@ -5,7 +5,6 @@ import io.github.edgarsskrabins.loan_platform.user.entity.Role;
 import io.github.edgarsskrabins.loan_platform.user.entity.User;
 import io.github.edgarsskrabins.loan_platform.user.service.UserService;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,21 +61,12 @@ class CurrentUserServiceTest {
     void failsOnEmptyContext() {
         SecurityContextHolder.clearContext();
 
-        // Documents current behaviour: there is no null guard on getAuthentication().
-        // Any code path reachable without authentication produces an opaque HTTP 500.
         assertThatThrownBy(() -> currentUserService.getCurrentUser())
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    @Disabled("""
-            BUG: JwtAuthenticationFilter stores the User *entity* as the principal, but User is
-            not a UserDetails/Principal, so Authentication.getName() falls through to
-            principal.toString() -> "io.github...User@1a2b3c". CurrentUserService then looks that
-            string up as an email and throws UserNotFoundException, breaking every authenticated
-            endpoint. Fix by making User implement UserDetails, or by putting the email in the
-            principal. Remove @Disabled once the principal and getName() agree.""")
-    @DisplayName("getCurrentUser works with the principal the JWT filter actually installs")
+    @DisplayName("getCurrentUser works with the User principal the JWT filter installs")
     void worksWithFilterInstalledPrincipal() {
         User user = user("ada@example.com");
         SecurityContextHolder.getContext().setAuthentication(

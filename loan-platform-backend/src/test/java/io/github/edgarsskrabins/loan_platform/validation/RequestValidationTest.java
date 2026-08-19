@@ -7,13 +7,11 @@ import io.github.edgarsskrabins.loan_platform.loanApplication.dto.deleteLoanAppl
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.entity.LoanStatus;
 import jakarta.validation.ConstraintViolation;
-import jakarta.validation.UnexpectedTypeException;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -22,14 +20,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.math.BigDecimal;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/**
- * Bean-validation rules on the request DTOs. These are the contract the controllers rely on
- * via {@code @Valid}, so they are worth pinning down without booting Spring.
- */
 class RequestValidationTest {
 
     private static ValidatorFactory factory;
@@ -118,22 +112,26 @@ class RequestValidationTest {
     class UpdateRequest {
 
         @Test
-        @DisplayName("accepts an id plus a target status and rejects a null id")
-        void requiresId() {
+        @DisplayName("accepts an id plus a target status")
+        void acceptsValidInput() {
             assertThat(validator.validate(
                     new UpdateLoanApplicationStatusRequest(1L, LoanStatus.APPROVED))).isEmpty();
-            assertThat(validator.validate(
-                    new UpdateLoanApplicationStatusRequest(null, LoanStatus.APPROVED))).hasSize(1);
         }
 
         @Test
-        @Disabled("""
-                BUG: newStatus carries no @NotNull, so {"id": 1} validates cleanly and the service
-                writes a null status into a NOT NULL column. Remove @Disabled once newStatus is
-                annotated @NotNull.""")
-        @DisplayName("rejects a missing target status")
+        @DisplayName("rejects a null id")
+        void requiresId() {
+            assertThat(messagesFor(validator.validate(
+                    new UpdateLoanApplicationStatusRequest(null, LoanStatus.APPROVED))))
+                    .contains("Loan application id is required");
+        }
+
+        @Test
+        @DisplayName("rejects a missing target status rather than writing null to a NOT NULL column")
         void requiresNewStatus() {
-            assertThat(validator.validate(new UpdateLoanApplicationStatusRequest(1L, null))).hasSize(1);
+            assertThat(messagesFor(validator.validate(
+                    new UpdateLoanApplicationStatusRequest(1L, null))))
+                    .contains("Target status is required");
         }
     }
 
@@ -142,33 +140,57 @@ class RequestValidationTest {
     class CreateRequest {
 
         @Test
-        @DisplayName("@NotBlank on a BigDecimal blows up the validator instead of validating")
-        void notBlankOnBigDecimalIsUnsupported() {
-            // Documents the bug below: @NotBlank only supports CharSequence, so Hibernate
-            // Validator cannot resolve a validator for BigDecimal and every request to
-            // POST /api/loans/loan-application fails with HTTP 500 before the service runs.
-            assertThatThrownBy(() ->
-                    validator.validate(new CreateLoanApplicationRequest(new BigDecimal("5000.00"))))
-                    .isInstanceOf(UnexpectedTypeException.class);
+        @DisplayName("accepts a positive amount and term")
+        void acceptsValidInput() {
+            assertThat(validator.validate(
+                    new CreateLoanApplicationRequest(new BigDecimal("5000.00"), 24))).isEmpty();
         }
 
         @Test
-        @Disabled("""
-                BUG: amount is annotated @NotBlank, which is CharSequence-only. It must be @NotNull.
-                Remove @Disabled once the annotation is corrected; then a positive amount validates
-                and null / zero / negative amounts produce violations.""")
-        @DisplayName("accepts a positive amount and rejects null, zero and negative amounts")
-        void validatesAmount() {
-            assertThat(validator.validate(new CreateLoanApplicationRequest(new BigDecimal("5000.00")))).isEmpty();
-            assertThat(validator.validate(new CreateLoanApplicationRequest(null))).hasSize(1);
-            assertThat(validator.validate(new CreateLoanApplicationRequest(BigDecimal.ZERO))).hasSize(1);
-            assertThat(validator.validate(new CreateLoanApplicationRequest(new BigDecimal("-1")))).hasSize(1);
+        @DisplayName("rejects a null amount without blowing up on the BigDecimal type")
+        void rejectsNullAmount() {
+            assertThat(messagesFor(validator.validate(new CreateLoanApplicationRequest(null, 24))))
+                    .contains("Please specify the loan amount");
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"0", "-1", "-5000.00"})
+        @DisplayName("rejects a zero or negative amount")
+        void rejectsNonPositiveAmount(String amount) {
+            assertThat(messagesFor(validator.validate(
+                    new CreateLoanApplicationRequest(new BigDecimal(amount), 24))))
+                    .contains("Loan amount must be positive");
+        }
+
+        @Test
+        @DisplayName("rejects a missing term, because term_months is NOT NULL")
+        void rejectsNullTerm() {
+            assertThat(messagesFor(validator.validate(
+                    new CreateLoanApplicationRequest(new BigDecimal("5000.00"), null))))
+                    .contains("Please specify the loan term in months");
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {0, -1})
+        @DisplayName("rejects a zero or negative term")
+        void rejectsNonPositiveTerm(int termMonths) {
+            assertThat(messagesFor(validator.validate(
+                    new CreateLoanApplicationRequest(new BigDecimal("5000.00"), termMonths))))
+                    .contains("Loan term must be positive");
+        }
+
+        @Test
+        @DisplayName("rejects an implausibly long term")
+        void rejectsExcessiveTerm() {
+            assertThat(messagesFor(validator.validate(
+                    new CreateLoanApplicationRequest(new BigDecimal("5000.00"), 481))))
+                    .contains("Loan term cannot exceed 480 months");
         }
     }
 
     private static <T> Set<String> messagesFor(Set<ConstraintViolation<T>> violations) {
         return violations.stream()
                 .map(ConstraintViolation::getMessage)
-                .collect(java.util.stream.Collectors.toSet());
+                .collect(Collectors.toSet());
     }
 }

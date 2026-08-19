@@ -4,12 +4,13 @@ import io.github.edgarsskrabins.loan_platform.auth.dto.login.LoginRequest;
 import io.github.edgarsskrabins.loan_platform.auth.dto.login.LoginResponse;
 import io.github.edgarsskrabins.loan_platform.auth.dto.register.RegisterRequest;
 import io.github.edgarsskrabins.loan_platform.auth.dto.register.RegisterResponse;
+import io.github.edgarsskrabins.loan_platform.customer.service.CustomerProfileService;
+import io.github.edgarsskrabins.loan_platform.exceptions.EmailAlreadyInUseException;
 import io.github.edgarsskrabins.loan_platform.exceptions.UserNotFoundException;
 import io.github.edgarsskrabins.loan_platform.security.jwt.JwtService;
 import io.github.edgarsskrabins.loan_platform.user.entity.Role;
 import io.github.edgarsskrabins.loan_platform.user.entity.User;
 import io.github.edgarsskrabins.loan_platform.user.service.UserService;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +42,9 @@ class AuthServiceTest {
     private UserService userService;
 
     @Mock
+    private CustomerProfileService customerProfileService;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @Mock
@@ -52,6 +56,7 @@ class AuthServiceTest {
     @Test
     @DisplayName("register hashes the password before persisting and never stores the raw value")
     void registerHashesPassword() {
+        when(userService.existsByEmail(EMAIL)).thenReturn(false);
         when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(PASSWORD_HASH);
         when(userService.save(any(User.class))).thenAnswer(invocation -> persisted(invocation.getArgument(0)));
 
@@ -66,13 +71,41 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("register defaults a new account to the CUSTOMER role")
+    void registerDefaultsRoleToCustomer() {
+        when(userService.existsByEmail(EMAIL)).thenReturn(false);
+        when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(PASSWORD_HASH);
+        when(userService.save(any(User.class))).thenAnswer(invocation -> persisted(invocation.getArgument(0)));
+
+        authService.register(new RegisterRequest(EMAIL, RAW_PASSWORD));
+
+        ArgumentCaptor<User> saved = ArgumentCaptor.forClass(User.class);
+        verify(userService).save(saved.capture());
+        assertThat(saved.getValue().getRole()).isEqualTo(Role.CUSTOMER);
+    }
+
+    @Test
+    @DisplayName("register creates the customer profile the account needs to apply for a loan")
+    void registerCreatesCustomerProfile() {
+        when(userService.existsByEmail(EMAIL)).thenReturn(false);
+        when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(PASSWORD_HASH);
+        when(userService.save(any(User.class))).thenAnswer(invocation -> persisted(invocation.getArgument(0)));
+
+        authService.register(new RegisterRequest(EMAIL, RAW_PASSWORD));
+
+        ArgumentCaptor<User> profileOwner = ArgumentCaptor.forClass(User.class);
+        verify(customerProfileService).createFor(profileOwner.capture());
+        assertThat(profileOwner.getValue().getId()).isEqualTo(42L);
+    }
+
+    @Test
     @DisplayName("register maps the persisted user onto the response")
     void registerMapsResponse() {
         Instant createdAt = Instant.parse("2026-01-01T00:00:00Z");
+        when(userService.existsByEmail(EMAIL)).thenReturn(false);
         when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(PASSWORD_HASH);
         when(userService.save(any(User.class))).thenAnswer(invocation -> {
             User user = persisted(invocation.getArgument(0));
-            user.setRole(Role.CUSTOMER);
             user.setCreatedAt(createdAt);
             return user;
         });
@@ -86,32 +119,15 @@ class AuthServiceTest {
     }
 
     @Test
-    @Disabled("""
-            BUG: AuthService.register never calls user.setRole(...), so role stays null.
-            users.role is NOT NULL in V1__init.sql, so every real registration fails with a
-            constraint violation. Remove @Disabled once register defaults new users to CUSTOMER.""")
-    @DisplayName("register defaults a new account to the CUSTOMER role")
-    void registerDefaultsRoleToCustomer() {
-        when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(PASSWORD_HASH);
-        when(userService.save(any(User.class))).thenAnswer(invocation -> persisted(invocation.getArgument(0)));
-
-        authService.register(new RegisterRequest(EMAIL, RAW_PASSWORD));
-
-        ArgumentCaptor<User> saved = ArgumentCaptor.forClass(User.class);
-        verify(userService).save(saved.capture());
-        assertThat(saved.getValue().getRole()).isEqualTo(Role.CUSTOMER);
-    }
-
-    @Test
-    @Disabled("""
-            BUG: register does not check UserRepository.existsByEmail, so a duplicate signup
-            surfaces as a raw DataIntegrityViolationException (HTTP 500) instead of a 409.
-            Remove @Disabled once register rejects taken emails explicitly.""")
-    @DisplayName("register rejects an email that is already taken")
+    @DisplayName("register rejects an email that is already taken without touching the encoder")
     void registerRejectsDuplicateEmail() {
+        when(userService.existsByEmail(EMAIL)).thenReturn(true);
+
         assertThatThrownBy(() -> authService.register(new RegisterRequest(EMAIL, RAW_PASSWORD)))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(EmailAlreadyInUseException.class)
+                .hasMessageContaining(EMAIL);
         verify(userService, never()).save(any());
+        verifyNoInteractions(passwordEncoder, customerProfileService);
     }
 
     @Test

@@ -7,7 +7,6 @@ import io.github.edgarsskrabins.loan_platform.user.service.UserService;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,12 +17,12 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -95,69 +94,63 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    @DisplayName("the authentication carries no authorities, so role-based rules cannot match")
-    void authenticationCarriesNoAuthorities() throws Exception {
+    @DisplayName("the authentication carries the user's role as a ROLE_-prefixed authority")
+    void authenticationCarriesRoleAuthority() throws Exception {
         request.addHeader("Authorization", "Bearer " + TOKEN);
         when(jwtService.extractUsername(TOKEN)).thenReturn(EMAIL);
         when(userService.getUserByEmail(EMAIL)).thenReturn(user());
 
         filter.doFilterInternal(request, response, filterChain);
 
-        // Documents current behaviour: the filter passes List.of() as authorities, so
-        // hasRole(...) / @PreAuthorize can never succeed and every role check has to be
-        // hand-written inside the services.
-        assertThat(SecurityContextHolder.getContext().getAuthentication().getAuthorities()).isEmpty();
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getAuthorities())
+                .extracting(GrantedAuthority::getAuthority)
+                .containsExactly("ROLE_CUSTOMER");
     }
 
     @Test
-    @DisplayName("an already-authenticated context is not overwritten")
+    @DisplayName("the resolved name is the email, so CurrentUserService can look the user up")
+    void authenticationNameIsTheEmail() throws Exception {
+        request.addHeader("Authorization", "Bearer " + TOKEN);
+        when(jwtService.extractUsername(TOKEN)).thenReturn(EMAIL);
+        when(userService.getUserByEmail(EMAIL)).thenReturn(user());
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo(EMAIL);
+    }
+
+    @Test
+    @DisplayName("an already-authenticated context is left untouched and the token is not parsed")
     void existingAuthenticationIsPreserved() throws Exception {
         Authentication existing = new UsernamePasswordAuthenticationToken("someone-else", null, List.of());
         SecurityContextHolder.getContext().setAuthentication(existing);
         request.addHeader("Authorization", "Bearer " + TOKEN);
-        when(jwtService.extractUsername(TOKEN)).thenReturn(EMAIL);
 
         filter.doFilterInternal(request, response, filterChain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isSameAs(existing);
-        verify(userService, never()).getUserByEmail(EMAIL);
+        verifyNoInteractions(jwtService, userService);
         verify(filterChain).doFilter(request, response);
     }
 
     @Test
-    @DisplayName("a token for a deleted account propagates UserNotFoundException")
-    void unknownUserPropagates() {
-        request.addHeader("Authorization", "Bearer " + TOKEN);
-        when(jwtService.extractUsername(TOKEN)).thenReturn(EMAIL);
-        when(userService.getUserByEmail(EMAIL)).thenThrow(new UserNotFoundException(EMAIL));
-
-        assertThatThrownBy(() -> filter.doFilterInternal(request, response, filterChain))
-                .isInstanceOf(UserNotFoundException.class);
-        verifyNoInteractions(filterChain);
-    }
-
-    @Test
-    @DisplayName("an invalid token escapes the filter as a JwtException")
-    void invalidTokenEscapesTheFilter() {
-        request.addHeader("Authorization", "Bearer " + TOKEN);
-        when(jwtService.extractUsername(TOKEN)).thenThrow(new JwtException("bad signature"));
-
-        // Documents current behaviour, see the @Disabled spec below.
-        assertThatThrownBy(() -> filter.doFilterInternal(request, response, filterChain))
-                .isInstanceOf(JwtException.class);
-        verifyNoInteractions(filterChain);
-    }
-
-    @Test
-    @Disabled("""
-            BUG: extractUsername throws on an expired/forged/malformed token and the filter does
-            not catch it, so a bad token surfaces as HTTP 500 instead of 401. Expected behaviour is
-            to leave the context unauthenticated and continue the chain, letting the entry point
-            return 401. Remove @Disabled once the parse is wrapped in a try/catch.""")
     @DisplayName("an invalid token leaves the request unauthenticated and continues the chain")
     void invalidTokenIsTreatedAsUnauthenticated() throws Exception {
         request.addHeader("Authorization", "Bearer " + TOKEN);
         when(jwtService.extractUsername(TOKEN)).thenThrow(new JwtException("bad signature"));
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    @DisplayName("a token for a deleted account is treated as unauthenticated, not as a 404")
+    void tokenForDeletedAccountIsTreatedAsUnauthenticated() throws Exception {
+        request.addHeader("Authorization", "Bearer " + TOKEN);
+        when(jwtService.extractUsername(TOKEN)).thenReturn(EMAIL);
+        when(userService.getUserByEmail(EMAIL)).thenThrow(new UserNotFoundException(EMAIL));
 
         filter.doFilterInternal(request, response, filterChain);
 
