@@ -20,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class LoanApplicationService {
@@ -44,6 +46,23 @@ public class LoanApplicationService {
                 savedLoanApplication.getId(),
                 savedLoanApplication.getStatus()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<LoanApplication> getLoanApplications() {
+        User currentUser = currentUserService.getCurrentUser();
+
+        if (currentUser.getRole() == Role.CUSTOMER) {
+            CustomerProfile customerProfile = customerProfileService.getByUserId(currentUser.getId());
+            return loanApplicationRepository.findByCustomerId(customerProfile.getId());
+        } else {
+            return loanApplicationRepository.findAll();
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public LoanApplication getLoanApplication(Long id) {
+        return findOrThrow(id);
     }
 
     @Transactional

@@ -5,22 +5,37 @@ import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanAppl
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.deleteLoanApplication.DeleteLoanApplicationRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusResponse;
+import io.github.edgarsskrabins.loan_platform.loanApplication.entity.LoanApplication;
 import io.github.edgarsskrabins.loan_platform.loanApplication.service.LoanApplicationService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("api/loans")
+@RequiredArgsConstructor
 public class LoanApplicationController {
 
-    LoanApplicationService loanApplicationService;
+    private final LoanApplicationService loanApplicationService;
 
     @PostMapping("/loan-application")
     public CreateLoanApplicationResponse createLoanApplication(
             @RequestBody @Valid CreateLoanApplicationRequest request
     ) {
         return loanApplicationService.createLoanApplication(request);
+    }
+
+    @GetMapping("/loan-applications")
+    public List<LoanApplication> getLoanApplications() {
+        return loanApplicationService.getLoanApplications();
+    }
+
+    @GetMapping("/loan-application/{id}")
+    public LoanApplication getLoanApplication(@PathVariable Long id) {
+        return loanApplicationService.getLoanApplication(id);
     }
 
     @PutMapping("/loan-application/{id}")
