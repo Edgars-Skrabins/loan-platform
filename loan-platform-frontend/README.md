@@ -1,27 +1,70 @@
-# LoanPlatformFrontend
+# Frontend — Loan Platform UI
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.2.21.
+Angular 18 application for the loan platform. Provides UI for customers to apply for loans and loan officers to review applications.
 
-## Development server
+---
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+## Requirements
 
-## Code scaffolding
+- Node.js (18+)
+- npm (included with Node.js)
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+## Quick Start
 
-## Build
+### 1. Install Dependencies
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+```bash
+npm install
+```
 
-## Running unit tests
+### 2. Start Development Server
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+```bash
+npm start
+```
 
-## Running end-to-end tests
+The application runs on `http://localhost:4200`.
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+### 3. Build for Production
 
-## Further help
+```bash
+npm run build
+```
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Output goes to the `dist/` directory.
+
+### 4. Run Tests
+
+```bash
+npm test
+```
+
+---
+
+## Tech Stack
+
+| Component | Choice |
+|-----------|--------|
+| Framework | Angular 18 |
+| Language | TypeScript 5.5 |
+| UI Components | Angular Material |
+| Build Tool | Angular CLI |
+
+---
+
+## API Configuration
+
+The frontend communicates with the backend API at `http://localhost:8080`.
+
+Make sure the backend is running before starting the frontend. See the [Backend README](../loan-platform-backend/README.md) for setup instructions.
+
+---
+
+## Development
+
+- **Start dev server:** `npm start`
+- **Build for production:** `npm run build`
+- **Watch mode:** `npm run watch`
+- **Run tests:** `npm test`
+
+For more Angular CLI commands, run `ng --help` or visit [angular.io](https://angular.io).
