@@ -2,7 +2,6 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { AuthGuard } from './auth.guard';
 import { AuthService } from '../services/auth.service';
-import { Role } from '../models/auth.model';
 
 describe('AuthGuard', () => {
   let guard: AuthGuard;
@@ -10,7 +9,9 @@ describe('AuthGuard', () => {
   let router: jasmine.SpyObj<Router>;
 
   beforeEach(() => {
-    const authServiceSpy = jasmine.createSpyObj('AuthService', ['isAuthenticated']);
+    const authServiceSpy = jasmine.createSpyObj('AuthService', [], {
+      isAuthenticated: false
+    });
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
 
     TestBed.configureTestingModule({
@@ -28,7 +29,7 @@ describe('AuthGuard', () => {
 
   describe('canActivate', () => {
     it('should allow access when user is authenticated', () => {
-      authService.isAuthenticated.and.returnValue(true);
+      Object.defineProperty(authService, 'isAuthenticated', { value: true });
 
       const result = guard.canActivate(
         { data: {} } as any,
@@ -39,7 +40,7 @@ describe('AuthGuard', () => {
     });
 
     it('should deny access when user is not authenticated', () => {
-      authService.isAuthenticated.and.returnValue(false);
+      Object.defineProperty(authService, 'isAuthenticated', { value: false });
 
       const result = guard.canActivate(
         { data: {} } as any,
@@ -50,7 +51,7 @@ describe('AuthGuard', () => {
     });
 
     it('should navigate to login when access is denied', () => {
-      authService.isAuthenticated.and.returnValue(false);
+      Object.defineProperty(authService, 'isAuthenticated', { value: false });
 
       guard.canActivate(
         { data: {} } as any,
@@ -61,7 +62,7 @@ describe('AuthGuard', () => {
     });
 
     it('should not navigate to login when access is allowed', () => {
-      authService.isAuthenticated.and.returnValue(true);
+      Object.defineProperty(authService, 'isAuthenticated', { value: true });
 
       guard.canActivate(
         { data: {} } as any,

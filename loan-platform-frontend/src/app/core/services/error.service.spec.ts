@@ -60,19 +60,19 @@ describe('ErrorService', () => {
 
   describe('getErrorMessage', () => {
     it('should return message for unauthorized error', () => {
-      const error = new AppError(ErrorType.UNAUTHORIZED, 'Auth required', 401);
+      const error = new AppError(ErrorType.UNAUTHORIZED, '', 401);
       const message = service.getErrorMessage(error);
       expect(message).toContain('session has expired');
     });
 
     it('should return message for validation error', () => {
-      const error = new AppError(ErrorType.VALIDATION, 'Invalid data', 400);
+      const error = new AppError(ErrorType.VALIDATION, '', 400);
       const message = service.getErrorMessage(error);
       expect(message).toContain('check your input');
     });
 
     it('should return message for server error', () => {
-      const error = new AppError(ErrorType.SERVER_ERROR, 'Server failed', 500);
+      const error = new AppError(ErrorType.SERVER_ERROR, '', 500);
       const message = service.getErrorMessage(error);
       expect(message).toContain('server error');
     });
