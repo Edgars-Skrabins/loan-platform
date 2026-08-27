@@ -1,0 +1,124 @@
+.detail-container {
+  padding: 24px;
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+
+    h2 {
+      margin: 0;
+      font-size: 28px;
+      color: #333;
+      flex: 1;
+    }
+  }
+
+  .loading {
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .detail-content {
+    max-width: 800px;
+
+    .info-card {
+      margin-bottom: 24px;
+
+      mat-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 16px;
+
+        h3 {
+          margin: 0;
+          font-size: 20px;
+        }
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 24px;
+
+        .info-item {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+
+          .label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+
+          .value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+          }
+        }
+      }
+    }
+
+    .action-card {
+      mat-card-header {
+        margin-bottom: 16px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 16px;
+
+        h3 {
+          margin: 0 0 4px 0;
+          font-size: 20px;
+        }
+
+        .subtitle {
+          margin: 0;
+          font-size: 12px;
+          color: #999;
+        }
+      }
+
+      .full-width {
+        width: 100%;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+
+        button {
+          flex: 1;
+          height: 44px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .detail-container {
+    padding: 16px;
+
+    .header {
+      gap: 8px;
+
+      h2 {
+        font-size: 22px;
+      }
+    }
+
+    .detail-content {
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}

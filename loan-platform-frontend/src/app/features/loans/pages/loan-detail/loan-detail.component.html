@@ -1,0 +1,85 @@
+<div class="detail-container">
+  <div class="header">
+    <button mat-icon-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h2>Loan Application Details</h2>
+    <div></div>
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && loan" class="detail-content">
+    <mat-card class="info-card">
+      <mat-card-header>
+        <h3>Application #{{ loan.id }}</h3>
+        <mat-chip [color]="getStatusColor(loan.status)" selected>
+          {{ loan.status | loanStatus }}
+        </mat-chip>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Loan Amount</span>
+            <span class="value">${{ loan.amount | number: '1.2-2' }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Loan Term</span>
+            <span class="value">{{ loan.termMonths }} months</span>
+          </div>
+
+          <div class="info-item" *ngIf="loan.interestRate">
+            <span class="label">Interest Rate</span>
+            <span class="value">{{ loan.interestRate }}%</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Application Date</span>
+            <span class="value">{{ loan.createdAt | date: 'medium' }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">Last Updated</span>
+            <span class="value">{{ loan.updatedAt | date: 'medium' }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="action-card" *ngIf="canUpdateStatus()">
+      <mat-card-header>
+        <h3>Update Status</h3>
+        <p class="subtitle">Loan Officer / Admin Only</p>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="statusForm" (ngSubmit)="updateStatus()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>New Status</mat-label>
+            <mat-select formControlName="newStatus">
+              <mat-option *ngFor="let option of loanStatusOptions" [value]="option.value">
+                {{ option.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <div class="form-actions">
+            <button
+              type="submit"
+              mat-raised-button
+              color="primary"
+              [disabled]="statusForm.invalid || updating"
+            >
+              <span *ngIf="!updating">Update Status</span>
+              <mat-spinner *ngIf="updating" diameter="20"></mat-spinner>
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

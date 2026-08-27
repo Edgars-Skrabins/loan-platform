@@ -1,0 +1,118 @@
+.loan-list-container {
+  padding: 24px;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+
+    h2 {
+      margin: 0;
+      font-size: 28px;
+      color: #333;
+    }
+  }
+
+  .loading {
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 24px;
+
+    mat-card {
+      max-width: 500px;
+      margin: 0 auto;
+
+      p {
+        font-size: 18px;
+        color: #666;
+        margin-bottom: 24px;
+      }
+    }
+  }
+
+  .loans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+
+    .loan-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+      }
+
+      mat-card-header {
+        border-bottom: 1px solid #eee;
+        margin-bottom: 16px;
+
+        .loan-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          h3 {
+            margin: 0;
+            font-size: 18px;
+          }
+        }
+      }
+
+      .loan-details {
+        .detail-row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 12px;
+
+          .label {
+            font-weight: 500;
+            color: #666;
+          }
+
+          .value {
+            font-weight: 600;
+            color: #333;
+          }
+        }
+      }
+
+      mat-card-actions {
+        padding: 16px;
+        border-top: 1px solid #eee;
+        display: flex;
+        gap: 8px;
+
+        button {
+          flex: 1;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .loan-list-container {
+    padding: 16px;
+
+    .header {
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+
+      button {
+        width: 100%;
+      }
+    }
+
+    .loans-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
