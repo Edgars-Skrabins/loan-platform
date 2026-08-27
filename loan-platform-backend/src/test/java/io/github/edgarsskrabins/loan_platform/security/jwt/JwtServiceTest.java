@@ -6,7 +6,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -21,10 +20,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class JwtServiceTest {
 
     private JwtService jwtService;
+    private static final String TEST_SECRET = "test-secret-key-for-testing-purposes-at-least-32-chars-1234567890";
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtService();
+        jwtService = new JwtService(TEST_SECRET);
     }
 
     @Test
@@ -110,12 +110,11 @@ class JwtServiceTest {
     }
 
     @Test
-    @Disabled("Pending: the signing key is generated per instance instead of read from configuration")
-    @DisplayName("the signing key is stable across instances so tokens survive a restart")
+    @DisplayName("the signing key is stable across instances with same secret")
     void signingKeyIsStableAcrossInstances() {
-        String token = new JwtService().generateToken(user("ada@example.com"));
+        String token = new JwtService(TEST_SECRET).generateToken(user("ada@example.com"));
 
-        assertThat(new JwtService().extractUsername(token)).isEqualTo("ada@example.com");
+        assertThat(new JwtService(TEST_SECRET).extractUsername(token)).isEqualTo("ada@example.com");
     }
 
     private Claims parse(String token) {
