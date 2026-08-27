@@ -1,0 +1,65 @@
+<!-- Dashboard Component Template -->
+
+<div class="dashboard-container">
+  <!-- Header Toolbar -->
+  <mat-toolbar color="primary" class="dashboard-toolbar">
+    <span class="toolbar-title">Loan Platform Dashboard</span>
+    <span class="spacer"></span>
+    <div class="user-info">
+      <span *ngIf="currentUser" class="user-email">{{ currentUser.email }}</span>
+      <button mat-button (click)="logout()" class="logout-btn">Logout</button>
+    </div>
+  </mat-toolbar>
+
+  <!-- Main Content -->
+  <div class="dashboard-content">
+    <mat-card class="welcome-card">
+      <mat-card-header>
+        <h2>Welcome to Loan Platform</h2>
+      </mat-card-header>
+      <mat-card-content>
+        <p>
+          You have successfully logged in to your account.
+        </p>
+        <p *ngIf="currentUser">
+          <strong>User Email:</strong> {{ currentUser.email }}
+        </p>
+        <p *ngIf="currentUser">
+          <strong>Role:</strong> {{ currentUser.role }}
+        </p>
+        <p>
+          This is a placeholder dashboard. Additional features and loan management
+          functionality will be added here.
+        </p>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-raised-button color="primary">View Loans</button>
+        <button mat-button>Apply for Loan</button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- Quick Stats Grid -->
+    <div class="stats-grid">
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-value">0</div>
+          <div class="stat-label">Active Loans</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-value">$0.00</div>
+          <div class="stat-label">Total Balance</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-value">0</div>
+          <div class="stat-label">Pending Applications</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

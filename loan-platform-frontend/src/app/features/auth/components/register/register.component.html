@@ -1,0 +1,123 @@
+<!-- Register Component Template -->
+
+<div class="register-container">
+  <div class="register-card">
+    <mat-card>
+      <mat-card-header>
+        <h2 class="register-title">Create Account</h2>
+        <p class="register-subtitle">Join Loan Platform today</p>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+          <!-- Email Field -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email</mat-label>
+            <input
+              matInput
+              type="email"
+              formControlName="email"
+              placeholder="Enter your email"
+              [disabled]="loading"
+            />
+            <mat-error *ngIf="f['email'].hasError('required')">
+              Email is required
+            </mat-error>
+            <mat-error *ngIf="f['email'].hasError('email')">
+              Please enter a valid email
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Password Field -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Password</mat-label>
+            <input
+              matInput
+              [type]="hidePassword ? 'password' : 'text'"
+              formControlName="password"
+              placeholder="At least 8 characters"
+              [disabled]="loading"
+            />
+            <button
+              type="button"
+              mat-icon-button
+              matSuffix
+              (click)="togglePasswordVisibility()"
+              [disabled]="loading"
+            >
+              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="f['password'].hasError('required')">
+              Password is required
+            </mat-error>
+            <mat-error *ngIf="f['password'].hasError('minlength')">
+              Password must be at least 8 characters
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Confirm Password Field -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Confirm Password</mat-label>
+            <input
+              matInput
+              [type]="hideConfirmPassword ? 'password' : 'text'"
+              formControlName="confirmPassword"
+              placeholder="Re-enter your password"
+              [disabled]="loading"
+            />
+            <button
+              type="button"
+              mat-icon-button
+              matSuffix
+              (click)="toggleConfirmPasswordVisibility()"
+              [disabled]="loading"
+            >
+              <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="f['confirmPassword'].hasError('required')">
+              Please confirm your password
+            </mat-error>
+            <mat-error *ngIf="f['confirmPassword'].hasError('passwordMismatch')">
+              Passwords do not match
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Terms Agreement -->
+          <div class="terms-checkbox">
+            <mat-checkbox
+              formControlName="agreeToTerms"
+              [disabled]="loading"
+            >
+              I agree to the
+              <a href="#" class="terms-link">Terms of Service</a>
+              and
+              <a href="#" class="terms-link">Privacy Policy</a>
+            </mat-checkbox>
+            <mat-error *ngIf="f['agreeToTerms'].hasError('required')">
+              You must agree to the terms
+            </mat-error>
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            mat-raised-button
+            color="primary"
+            class="full-width submit-button"
+            [disabled]="loading || registerForm.invalid"
+          >
+            <span *ngIf="!loading">Create Account</span>
+            <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+          </button>
+        </form>
+      </mat-card-content>
+
+      <mat-card-footer>
+        <p class="login-link">
+          Already have an account?
+          <a (click)="goToLogin()" class="link">Sign in</a>
+        </p>
+      </mat-card-footer>
+    </mat-card>
+  </div>
+</div>
