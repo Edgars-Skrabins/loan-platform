@@ -67,8 +67,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception exception) {
-        log.error("Unhandled exception", exception);
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
+        log.error("Unhandled exception - Full stack trace:", exception);
+        exception.printStackTrace();
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong: " + exception.getMessage());
     }
 
     private static ResponseEntity<ApiError> build(HttpStatus status, String message) {
@@ -76,3 +77,4 @@ public class GlobalExceptionHandler {
                 .body(ApiError.of(status.value(), status.getReasonPhrase(), message));
     }
 }
+
