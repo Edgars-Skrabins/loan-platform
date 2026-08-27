@@ -77,4 +77,8 @@ export class LoanApplicationComponent implements OnInit, OnDestroy {
   cancel(): void {
     this.router.navigate(['/loans']);
   }
+
+  goBack(): void {
+    this.router.navigate(['/loans']);
+  }
 }

@@ -5,12 +5,51 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 24px;
     margin-bottom: 32px;
+    flex-wrap: wrap;
+
+    .back-button {
+      min-width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      color: #5b7fe6;
+      flex-shrink: 0;
+
+      &:hover {
+        background-color: rgba(91, 127, 230, 0.08);
+      }
+
+      mat-icon {
+        font-size: 24px;
+      }
+    }
 
     h2 {
       margin: 0;
       font-size: 28px;
-      color: #333;
+      color: #2c3e50;
+      flex: 1;
+      min-width: 200px;
+      font-weight: 600;
+    }
+
+    button:not(.back-button) {
+      height: 44px;
+      font-weight: 500;
+      white-space: nowrap;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #5b7fe6 0%, #6b5fd9 100%);
+      color: white;
+      flex-shrink: 0;
+
+      mat-icon {
+        margin-right: 8px;
+      }
     }
   }
 
@@ -22,16 +61,32 @@
 
   .empty-state {
     text-align: center;
-    padding: 40px 24px;
+    padding: 60px 24px;
 
     mat-card {
       max-width: 500px;
       margin: 0 auto;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(91, 127, 230, 0.08);
 
-      p {
-        font-size: 18px;
-        color: #666;
-        margin-bottom: 24px;
+      mat-card-content {
+        padding: 32px 24px;
+
+        p {
+          font-size: 16px;
+          color: #7f8c8d;
+          margin-bottom: 32px;
+          line-height: 1.6;
+        }
+
+        button {
+          height: 44px;
+          font-weight: 500;
+          font-size: 14px;
+          border-radius: 6px;
+          background: linear-gradient(135deg, #5b7fe6 0%, #6b5fd9 100%);
+          color: white;
+        }
       }
     }
   }
@@ -42,16 +97,20 @@
     gap: 24px;
 
     .loan-card {
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(91, 127, 230, 0.08);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
+      background: white;
 
       &:hover {
         transform: translateY(-4px);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 8px 16px rgba(91, 127, 230, 0.15);
       }
 
       mat-card-header {
-        border-bottom: 1px solid #eee;
-        margin-bottom: 16px;
+        border-bottom: 1px solid #e8ecf1;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
 
         .loan-header {
           display: flex;
@@ -61,36 +120,70 @@
           h3 {
             margin: 0;
             font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
           }
         }
+      }
+
+      mat-card-content {
+        padding: 0 0 16px 0;
       }
 
       .loan-details {
         .detail-row {
           display: flex;
           justify-content: space-between;
-          margin-bottom: 12px;
+          margin-bottom: 16px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
 
           .label {
-            font-weight: 500;
-            color: #666;
+            font-weight: 600;
+            color: #7f8c8d;
+            font-size: 13px;
           }
 
           .value {
             font-weight: 600;
-            color: #333;
+            color: #2c3e50;
+            text-align: right;
           }
         }
       }
 
       mat-card-actions {
-        padding: 16px;
-        border-top: 1px solid #eee;
+        padding: 16px 0 0 0;
+        border-top: 1px solid #e8ecf1;
         display: flex;
-        gap: 8px;
+        gap: 12px;
 
         button {
           flex: 1;
+          height: 40px;
+          font-size: 13px;
+          font-weight: 500;
+          border-radius: 6px;
+
+          &[color="primary"] {
+            color: #5b7fe6;
+            border: 1px solid #5b7fe6;
+
+            &:hover {
+              background: rgba(91, 127, 230, 0.08);
+            }
+          }
+
+          &[color="warn"] {
+            color: #ff7043;
+            border: 1px solid #ff7043;
+
+            &:hover {
+              background: rgba(255, 112, 67, 0.08);
+            }
+          }
         }
       }
     }
@@ -103,8 +196,13 @@
 
     .header {
       flex-direction: column;
+      align-items: stretch;
       gap: 16px;
       margin-bottom: 24px;
+
+      h2 {
+        font-size: 24px;
+      }
 
       button {
         width: 100%;
@@ -113,6 +211,12 @@
 
     .loans-grid {
       grid-template-columns: 1fr;
+    }
+
+    .empty-state {
+      button {
+        width: 100%;
+      }
     }
   }
 }

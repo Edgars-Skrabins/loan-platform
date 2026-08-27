@@ -9,7 +9,10 @@
     <span class="spacer"></span>
     <div class="user-info">
       <span *ngIf="currentUser" class="user-email">{{ currentUser.email }}</span>
-      <button mat-button (click)="logout()" class="logout-btn">Logout</button>
+      <button mat-raised-button (click)="logout()" class="logout-btn">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
     </div>
   </mat-toolbar>
 
@@ -40,34 +43,5 @@
         </button>
       </mat-card-actions>
     </mat-card>
-
-    <div class="quick-links">
-      <mat-card class="quick-link-card">
-        <mat-card-content>
-          <mat-icon>assessment</mat-icon>
-          <h4>Loan Applications</h4>
-          <p>View and manage your loan applications</p>
-          <a routerLink="/loans">Go to Loans</a>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="quick-link-card">
-        <mat-card-content>
-          <mat-icon>note_add</mat-icon>
-          <h4>New Application</h4>
-          <p>Start a new loan application</p>
-          <a routerLink="/loans/apply">Apply Now</a>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="quick-link-card">
-        <mat-card-content>
-          <mat-icon>person</mat-icon>
-          <h4>Profile</h4>
-          <p>Update your profile information</p>
-          <a href="#">Edit Profile</a>
-        </mat-card-content>
-      </mat-card>
-    </div>
   </div>
 </div>

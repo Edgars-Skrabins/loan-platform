@@ -80,6 +80,10 @@ export class LoanListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/loans/apply']);
   }
 
+  goBack(): void {
+    this.router.navigate(['/dashboard']);
+  }
+
   getStatusColor(status: LoanStatus): string {
     const colorMap: Record<LoanStatus, string> = {
       [LoanStatus.PENDING]: 'warn',

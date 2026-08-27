@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5b7fe6 0%, #6b5fd9 100%);
   padding: 20px;
 
   .login-card {
@@ -14,33 +14,35 @@
 
     mat-card {
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      border-radius: 8px;
+      border-radius: 12px;
+      background: white;
 
       mat-card-header {
         text-align: center;
-        padding: 30px 24px 20px;
+        padding: 40px 24px 32px;
 
         .login-title {
           margin: 0;
           font-size: 28px;
           font-weight: 600;
-          color: #333;
+          color: #2c3e50;
         }
 
         .login-subtitle {
-          margin: 8px 0 0;
-          color: #666;
-          font-size: 14px;
+          margin: 16px 0 0;
+          color: #7f8c8d;
+          font-size: 15px;
+          line-height: 1.5;
         }
       }
 
       mat-card-content {
-        padding: 20px 24px;
+        padding: 32px 24px;
 
         form {
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 24px;
 
           .full-width {
             width: 100%;
@@ -52,34 +54,35 @@
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-top: 10px;
+            margin-top: 16px;
 
             &:not(:disabled) {
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              background: linear-gradient(135deg, #5b7fe6 0%, #6b5fd9 100%);
             }
           }
         }
       }
 
       mat-card-footer {
-        padding: 20px 24px;
-        border-top: 1px solid #eee;
+        padding: 24px 24px;
+        border-top: 1px solid #e8ecf1;
         text-align: center;
 
         .register-link {
           margin: 0;
-          color: #666;
+          color: #7f8c8d;
           font-size: 14px;
+          line-height: 1.6;
 
           .link {
-            color: #667eea;
+            color: #5b7fe6;
             font-weight: 600;
             cursor: pointer;
             text-decoration: none;
             transition: color 0.3s ease;
 
             &:hover {
-              color: #764ba2;
+              color: #6b5fd9;
               text-decoration: underline;
             }
           }
