@@ -1,5 +1,3 @@
-// Dashboard Component Styles
-
 .dashboard-container {
   display: flex;
   flex-direction: column;
@@ -16,6 +14,30 @@
 
     .spacer {
       flex: 1 1 auto;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      margin: 0 24px;
+
+      a {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 8px 12px;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        &.active {
+          background-color: rgba(255, 255, 255, 0.2);
+        }
+      }
     }
 
     .user-info {
@@ -83,12 +105,12 @@
       }
     }
 
-    .stats-grid {
+    .quick-links {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 24px;
 
-      .stat-card {
+      .quick-link-card {
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -102,21 +124,38 @@
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
-          padding: 24px;
           text-align: center;
+          padding: 24px;
 
-          .stat-value {
-            font-size: 32px;
-            font-weight: 700;
+          mat-icon {
+            font-size: 48px;
+            width: 48px;
+            height: 48px;
             color: #667eea;
-            margin-bottom: 8px;
+            margin-bottom: 16px;
           }
 
-          .stat-label {
+          h4 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            color: #333;
+          }
+
+          p {
+            margin: 0 0 16px 0;
             font-size: 14px;
             color: #666;
-            font-weight: 500;
+          }
+
+          a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+
+            &:hover {
+              color: #764ba2;
+            }
           }
         }
       }
@@ -124,10 +163,13 @@
   }
 }
 
-// Responsive
 @media (max-width: 768px) {
   .dashboard-container {
     .dashboard-toolbar {
+      .nav-links {
+        display: none;
+      }
+
       .user-info {
         gap: 8px;
 
@@ -140,7 +182,7 @@
     .dashboard-content {
       padding: 20px 16px;
 
-      .stats-grid {
+      .quick-links {
         grid-template-columns: 1fr;
         gap: 16px;
       }

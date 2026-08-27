@@ -1,9 +1,11 @@
-<!-- Dashboard Component Template -->
-
 <div class="dashboard-container">
-  <!-- Header Toolbar -->
   <mat-toolbar color="primary" class="dashboard-toolbar">
-    <span class="toolbar-title">Loan Platform Dashboard</span>
+    <span class="toolbar-title">Loan Platform</span>
+    <span class="spacer"></span>
+    <nav class="nav-links">
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
+      <a routerLink="/loans" routerLinkActive="active">Loans</a>
+    </nav>
     <span class="spacer"></span>
     <div class="user-info">
       <span *ngIf="currentUser" class="user-email">{{ currentUser.email }}</span>
@@ -11,53 +13,59 @@
     </div>
   </mat-toolbar>
 
-  <!-- Main Content -->
   <div class="dashboard-content">
     <mat-card class="welcome-card">
       <mat-card-header>
-        <h2>Welcome to Loan Platform</h2>
+        <h2>Welcome Back</h2>
       </mat-card-header>
       <mat-card-content>
-        <p>
-          You have successfully logged in to your account.
-        </p>
         <p *ngIf="currentUser">
-          <strong>User Email:</strong> {{ currentUser.email }}
+          You're logged in as <strong>{{ currentUser.email }}</strong>
         </p>
         <p *ngIf="currentUser">
           <strong>Role:</strong> {{ currentUser.role }}
         </p>
         <p>
-          This is a placeholder dashboard. Additional features and loan management
-          functionality will be added here.
+          Use the navigation menu above to view your loans or apply for a new one.
         </p>
       </mat-card-content>
       <mat-card-actions>
-        <button mat-raised-button color="primary">View Loans</button>
-        <button mat-button>Apply for Loan</button>
+        <button mat-raised-button color="primary" routerLink="/loans">
+          <mat-icon>account_balance</mat-icon>
+          View My Loans
+        </button>
+        <button mat-raised-button color="accent" routerLink="/loans/apply">
+          <mat-icon>add</mat-icon>
+          Apply for Loan
+        </button>
       </mat-card-actions>
     </mat-card>
 
-    <!-- Quick Stats Grid -->
-    <div class="stats-grid">
-      <mat-card class="stat-card">
+    <div class="quick-links">
+      <mat-card class="quick-link-card">
         <mat-card-content>
-          <div class="stat-value">0</div>
-          <div class="stat-label">Active Loans</div>
+          <mat-icon>assessment</mat-icon>
+          <h4>Loan Applications</h4>
+          <p>View and manage your loan applications</p>
+          <a routerLink="/loans">Go to Loans</a>
         </mat-card-content>
       </mat-card>
 
-      <mat-card class="stat-card">
+      <mat-card class="quick-link-card">
         <mat-card-content>
-          <div class="stat-value">$0.00</div>
-          <div class="stat-label">Total Balance</div>
+          <mat-icon>note_add</mat-icon>
+          <h4>New Application</h4>
+          <p>Start a new loan application</p>
+          <a routerLink="/loans/apply">Apply Now</a>
         </mat-card-content>
       </mat-card>
 
-      <mat-card class="stat-card">
+      <mat-card class="quick-link-card">
         <mat-card-content>
-          <div class="stat-value">0</div>
-          <div class="stat-label">Pending Applications</div>
+          <mat-icon>person</mat-icon>
+          <h4>Profile</h4>
+          <p>Update your profile information</p>
+          <a href="#">Edit Profile</a>
         </mat-card-content>
       </mat-card>
     </div>

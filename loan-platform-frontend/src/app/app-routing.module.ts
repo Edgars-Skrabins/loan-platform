@@ -12,6 +12,11 @@ const routes: Routes = [
     loadChildren: () => import('./features/dashboard/dashboard.module').then(m => m.DashboardModule),
     canActivate: [AuthGuard]
   },
+  {
+    path: 'loans',
+    loadChildren: () => import('./features/loans/loans.module').then(m => m.LoansModule),
+    canActivate: [AuthGuard]
+  },
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   { path: '**', redirectTo: '/dashboard' }
 ];
