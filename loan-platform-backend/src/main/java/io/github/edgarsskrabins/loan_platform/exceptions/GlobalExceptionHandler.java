@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler({UserNotFoundException.class, CustomerProfileNotFoundException.class,
-            LoanApplicationNotFoundException.class})
+            LoanApplicationNotFoundException.class, ProfileSettingsNotFoundException.class})
     public ResponseEntity<ApiError> handleNotFound(RuntimeException exception) {
         return build(HttpStatus.NOT_FOUND, exception.getMessage());
     }

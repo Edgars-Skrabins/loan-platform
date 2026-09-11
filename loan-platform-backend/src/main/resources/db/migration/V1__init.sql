@@ -68,3 +68,4 @@ CREATE TABLE audit_logs
     action    VARCHAR(100) NOT NULL, -- USER_LOGIN | LOAN_APPROVED | ...
     timestamp TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
+

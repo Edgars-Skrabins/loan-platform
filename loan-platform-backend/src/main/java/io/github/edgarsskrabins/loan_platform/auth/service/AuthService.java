@@ -6,6 +6,7 @@ import io.github.edgarsskrabins.loan_platform.auth.dto.register.RegisterRequest;
 import io.github.edgarsskrabins.loan_platform.auth.dto.register.RegisterResponse;
 import io.github.edgarsskrabins.loan_platform.customer.service.CustomerProfileService;
 import io.github.edgarsskrabins.loan_platform.exceptions.EmailAlreadyInUseException;
+import io.github.edgarsskrabins.loan_platform.profile.service.ProfileSettingsService;
 import io.github.edgarsskrabins.loan_platform.security.jwt.JwtService;
 import io.github.edgarsskrabins.loan_platform.user.entity.Role;
 import io.github.edgarsskrabins.loan_platform.user.entity.User;
@@ -22,6 +23,7 @@ public class AuthService {
 
     private final UserService userService;
     private final CustomerProfileService customerProfileService;
+    private final ProfileSettingsService profileSettingsService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
@@ -38,6 +40,7 @@ public class AuthService {
 
         User savedUser = userService.save(user);
         customerProfileService.create(savedUser);
+        profileSettingsService.create(savedUser);
 
         return new RegisterResponse(
                 savedUser.getId(),
