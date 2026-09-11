@@ -15,7 +15,7 @@ public class CustomerProfileService {
     private final CustomerProfileRepository customerProfileRepository;
 
     @Transactional
-    public CustomerProfile createFor(User user) {
+    public CustomerProfile create(User user) {
         CustomerProfile profile = new CustomerProfile();
         profile.setUser(user);
         return customerProfileRepository.save(profile);

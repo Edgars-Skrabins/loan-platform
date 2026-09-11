@@ -37,7 +37,7 @@ public class AuthService {
         user.setRole(Role.CUSTOMER);
 
         User savedUser = userService.save(user);
-        customerProfileService.createFor(savedUser);
+        customerProfileService.create(savedUser);
 
         return new RegisterResponse(
                 savedUser.getId(),

@@ -94,7 +94,7 @@ class AuthServiceTest {
         authService.register(new RegisterRequest(EMAIL, RAW_PASSWORD));
 
         ArgumentCaptor<User> profileOwner = ArgumentCaptor.forClass(User.class);
-        verify(customerProfileService).createFor(profileOwner.capture());
+        verify(customerProfileService).create(profileOwner.capture());
         assertThat(profileOwner.getValue().getId()).isEqualTo(42L);
     }
 
