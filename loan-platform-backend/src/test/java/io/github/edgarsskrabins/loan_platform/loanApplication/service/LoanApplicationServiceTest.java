@@ -9,6 +9,7 @@ import io.github.edgarsskrabins.loan_platform.exceptions.LoanApplicationNotFound
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationResponse;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.deleteLoanApplication.DeleteLoanApplicationRequest;
+import io.github.edgarsskrabins.loan_platform.loanApplication.dto.getLoanApplication.GetLoanApplicationResponse;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusResponse;
 import io.github.edgarsskrabins.loan_platform.loanApplication.entity.LoanApplication;
@@ -103,6 +104,63 @@ class LoanApplicationServiceTest {
     }
 
     @Nested
+    @DisplayName("getLoanApplication")
+    class GetOne {
+
+        @Test
+        @DisplayName("lets the owning customer view their own application")
+        void ownerCanViewOwnApplication() {
+            when(currentUserService.getCurrentUser()).thenReturn(user(Role.CUSTOMER));
+            when(loanApplicationRepository.findById(LOAN_ID))
+                    .thenReturn(Optional.of(application(LoanStatus.PENDING)));
+            when(customerProfileService.getByUserId(USER_ID)).thenReturn(profile(PROFILE_ID));
+
+            GetLoanApplicationResponse response = service.getLoanApplication(LOAN_ID);
+
+            assertThat(response.id()).isEqualTo(LOAN_ID);
+            assertThat(response.customerId()).isEqualTo(PROFILE_ID);
+        }
+
+        @ParameterizedTest
+        @EnumSource(value = Role.class, names = {"LOAN_OFFICER", "ADMIN"})
+        @DisplayName("lets staff view an application without owning it")
+        void staffCanViewAnyApplication(Role role) {
+            when(currentUserService.getCurrentUser()).thenReturn(user(role));
+            when(loanApplicationRepository.findById(LOAN_ID))
+                    .thenReturn(Optional.of(application(LoanStatus.PENDING)));
+
+            GetLoanApplicationResponse response = service.getLoanApplication(LOAN_ID);
+
+            assertThat(response.id()).isEqualTo(LOAN_ID);
+        }
+
+        @Test
+        @DisplayName("refuses to show an application belonging to another customer")
+        void refusesOtherCustomersApplication() {
+            User attacker = user(Role.CUSTOMER);
+            attacker.setId(999L);
+            when(currentUserService.getCurrentUser()).thenReturn(attacker);
+            when(loanApplicationRepository.findById(LOAN_ID))
+                    .thenReturn(Optional.of(application(LoanStatus.PENDING)));
+            when(customerProfileService.getByUserId(999L)).thenReturn(profile(222L));
+
+            assertThatThrownBy(() -> service.getLoanApplication(LOAN_ID))
+                    .isInstanceOf(ForbiddenOperationException.class)
+                    .hasMessage("You can only view your own loan applications");
+        }
+
+        @Test
+        @DisplayName("throws LoanApplicationNotFoundException for an unknown id")
+        void failsOnUnknownApplication() {
+            when(currentUserService.getCurrentUser()).thenReturn(user(Role.LOAN_OFFICER));
+            when(loanApplicationRepository.findById(404L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> service.getLoanApplication(404L))
+                    .isInstanceOf(LoanApplicationNotFoundException.class);
+        }
+    }
+
+    @Nested
     @DisplayName("updateLoanApplicationStatus")
     class UpdateStatus {
 
@@ -148,12 +206,39 @@ class LoanApplicationServiceTest {
         }
 
         @Test
-        @Disabled("Pending: status transitions are not validated as a state machine")
         @DisplayName("refuses to move a decided application back to PENDING")
         void cannotReopenDecidedApplication() {
             when(currentUserService.getCurrentUser()).thenReturn(user(Role.LOAN_OFFICER));
             when(loanApplicationRepository.findById(LOAN_ID))
                     .thenReturn(Optional.of(application(LoanStatus.APPROVED)));
+
+            assertThatThrownBy(() -> service.updateLoanApplicationStatus(
+                    new UpdateLoanApplicationStatusRequest(LOAN_ID, LoanStatus.PENDING)))
+                    .isInstanceOf(InvalidLoanStateException.class);
+            verify(loanApplicationRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("lets an admin override a decided application back to PENDING")
+        void adminCanReopenDecidedApplication() {
+            LoanApplication application = application(LoanStatus.APPROVED);
+            when(currentUserService.getCurrentUser()).thenReturn(user(Role.ADMIN));
+            when(loanApplicationRepository.findById(LOAN_ID)).thenReturn(Optional.of(application));
+            when(loanApplicationRepository.save(application)).thenReturn(application);
+
+            UpdateLoanApplicationStatusResponse response = service.updateLoanApplicationStatus(
+                    new UpdateLoanApplicationStatusRequest(LOAN_ID, LoanStatus.PENDING));
+
+            assertThat(application.getStatus()).isEqualTo(LoanStatus.PENDING);
+            assertThat(response.newStatus()).isEqualTo(LoanStatus.PENDING);
+        }
+
+        @Test
+        @DisplayName("refuses a loan officer skipping straight from IN_REVIEW to PENDING")
+        void officerCannotMoveBackwards() {
+            when(currentUserService.getCurrentUser()).thenReturn(user(Role.LOAN_OFFICER));
+            when(loanApplicationRepository.findById(LOAN_ID))
+                    .thenReturn(Optional.of(application(LoanStatus.IN_REVIEW)));
 
             assertThatThrownBy(() -> service.updateLoanApplicationStatus(
                     new UpdateLoanApplicationStatusRequest(LOAN_ID, LoanStatus.PENDING)))

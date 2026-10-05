@@ -108,7 +108,7 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    @DisplayName("the resolved name is the email, so CurrentUserService can look the user up")
+    @DisplayName("the resolved authentication's name is the user's email")
     void authenticationNameIsTheEmail() throws Exception {
         request.addHeader("Authorization", "Bearer " + TOKEN);
         when(jwtService.extractUsername(TOKEN)).thenReturn(EMAIL);

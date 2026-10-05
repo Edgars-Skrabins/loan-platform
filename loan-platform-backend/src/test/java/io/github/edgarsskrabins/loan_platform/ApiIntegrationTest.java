@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -231,6 +232,63 @@ class ApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("a loan application response never includes the owning customer's password hash")
+    void loanApplicationResponseExcludesPasswordHash() throws Exception {
+        register("ada@example.com", "longenough").andExpect(status().isOk());
+        String token = tokenFor("ada@example.com", "longenough");
+
+        MvcResult created = mockMvc.perform(post("/api/loans/loan-application")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"amount": 5000.00, "termMonths": 24}"""))
+                .andReturn();
+
+        long loanId = json(created).get("id").asLong();
+
+        mockMvc.perform(get("/api/loans/loan-application/" + loanId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.customerId").isNumber())
+                .andExpect(jsonPath("$..passwordHash").doesNotExist())
+                .andExpect(jsonPath("$..password").doesNotExist());
+
+        mockMvc.perform(get("/api/loans/loan-applications")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$..passwordHash").doesNotExist())
+                .andExpect(jsonPath("$..password").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("a customer cannot view another customer's application")
+    void customerCannotViewAnotherCustomersApplication() throws Exception {
+        register("ada@example.com", "longenough").andExpect(status().isOk());
+        register("grace@example.com", "longenough").andExpect(status().isOk());
+
+        long adaLoanId = createLoanIgnoringStatus(tokenFor("ada@example.com", "longenough"));
+        String graceToken = tokenFor("grace@example.com", "longenough");
+
+        mockMvc.perform(get("/api/loans/loan-application/" + adaLoanId)
+                        .header("Authorization", "Bearer " + graceToken))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("staff can view an application they do not own")
+    void staffCanViewAnyApplication() throws Exception {
+        register("ada@example.com", "longenough").andExpect(status().isOk());
+        long loanId = createLoanIgnoringStatus(tokenFor("ada@example.com", "longenough"));
+
+        String officerToken = staffTokenFor("officer2@example.com", Role.LOAN_OFFICER);
+
+        mockMvc.perform(get("/api/loans/loan-application/" + loanId)
+                        .header("Authorization", "Bearer " + officerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(loanId));
+    }
+
+    @Test
     @DisplayName("the stored password is a BCrypt hash, never the plaintext")
     void passwordIsStoredHashed() throws Exception {
         register("ada@example.com", "longenough").andExpect(status().isOk());
@@ -277,6 +335,17 @@ class ApiIntegrationTest {
                         .content("""
                                 {"amount": 5000.00, "termMonths": 24}"""))
                 .andExpect(status().isCreated())
+                .andReturn();
+
+        return json(result).get("id").asLong();
+    }
+
+    private long createLoanIgnoringStatus(String token) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/loans/loan-application")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"amount": 5000.00, "termMonths": 24}"""))
                 .andReturn();
 
         return json(result).get("id").asLong();
