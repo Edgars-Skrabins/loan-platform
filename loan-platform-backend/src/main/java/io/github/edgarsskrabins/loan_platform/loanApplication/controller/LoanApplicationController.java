@@ -3,9 +3,9 @@ package io.github.edgarsskrabins.loan_platform.loanApplication.controller;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationResponse;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.deleteLoanApplication.DeleteLoanApplicationRequest;
+import io.github.edgarsskrabins.loan_platform.loanApplication.dto.getLoanApplication.GetLoanApplicationResponse;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusResponse;
-import io.github.edgarsskrabins.loan_platform.loanApplication.entity.LoanApplication;
 import io.github.edgarsskrabins.loan_platform.loanApplication.service.LoanApplicationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,12 +29,12 @@ public class LoanApplicationController {
     }
 
     @GetMapping("/loan-applications")
-    public List<LoanApplication> getLoanApplications() {
+    public List<GetLoanApplicationResponse> getLoanApplications() {
         return loanApplicationService.getLoanApplications();
     }
 
     @GetMapping("/loan-application/{id}")
-    public LoanApplication getLoanApplication(@PathVariable Long id) {
+    public GetLoanApplicationResponse getLoanApplication(@PathVariable Long id) {
         return loanApplicationService.getLoanApplication(id);
     }
 
