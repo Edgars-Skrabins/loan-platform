@@ -104,7 +104,7 @@ export class LoanDetailComponent implements OnInit, OnDestroy {
   }
 
   canUpdateStatus(): boolean {
-    return this.currentUserRole === Role.ADMIN || this.currentUserRole === 'LOAN_OFFICER' as any;
+    return this.currentUserRole === Role.ADMIN || this.currentUserRole === Role.LOAN_OFFICER;
   }
 
   goBack(): void {

@@ -95,9 +95,6 @@ export class LoanListComponent implements OnInit, OnDestroy {
   }
 
   canDelete(loan: LoanApplication): boolean {
-    if (this.currentUserRole === Role.ADMIN || this.currentUserRole === 'LOAN_OFFICER' as any) {
-      return loan.status === LoanStatus.PENDING;
-    }
     return loan.status === LoanStatus.PENDING;
   }
 }

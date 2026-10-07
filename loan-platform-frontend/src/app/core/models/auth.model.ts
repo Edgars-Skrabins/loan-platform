@@ -1,6 +1,7 @@
 export enum Role {
-  ADMIN = 'ADMIN',
-  USER = 'USER'
+  CUSTOMER = 'CUSTOMER',
+  LOAN_OFFICER = 'LOAN_OFFICER',
+  ADMIN = 'ADMIN'
 }
 
 export interface LoginRequest {

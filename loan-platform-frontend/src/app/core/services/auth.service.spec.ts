@@ -10,7 +10,7 @@ describe('AuthService', () => {
   const mockLoginResponse: LoginResponse = {
     id: 1,
     email: 'test@example.com',
-    role: Role.USER,
+    role: Role.CUSTOMER,
     token: 'mock-jwt-token'
   };
 
@@ -78,7 +78,7 @@ describe('AuthService', () => {
 
       const req = httpMock.expectOne(r => r.url.includes('auth/register'));
       expect(req.request.method).toBe('POST');
-      req.flush({ id: 2, email: 'newuser@example.com', role: Role.USER });
+      req.flush({ id: 2, email: 'newuser@example.com', role: Role.CUSTOMER });
     });
   });
 
