@@ -15,6 +15,8 @@ describe('AuthService', () => {
   };
 
   beforeEach(() => {
+    localStorage.clear();
+
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [AuthService]
@@ -22,8 +24,6 @@ describe('AuthService', () => {
 
     service = TestBed.inject(AuthService);
     httpMock = TestBed.inject(HttpTestingController);
-
-    localStorage.clear();
   });
 
   afterEach(() => {

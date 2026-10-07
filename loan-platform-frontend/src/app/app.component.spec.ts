@@ -20,16 +20,10 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have as title 'loan-platform-frontend'`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('loan-platform-frontend');
-  });
-
-  it('should render title', () => {
+  it('hosts a router outlet so routed pages have somewhere to render', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, loan-platform-frontend');
+    expect(compiled.querySelector('router-outlet')).toBeTruthy();
   });
 });
