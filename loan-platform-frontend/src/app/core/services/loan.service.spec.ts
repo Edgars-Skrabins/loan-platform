@@ -94,11 +94,10 @@ describe('LoanService', () => {
   describe('updateLoanApplicationStatus', () => {
     it('should send PUT request to update loan status', (done) => {
       const updateRequest: UpdateLoanApplicationStatusRequest = {
-        id: 1,
         newStatus: LoanStatus.APPROVED
       };
 
-      service.updateLoanApplicationStatus(updateRequest).subscribe((response) => {
+      service.updateLoanApplicationStatus(1, updateRequest).subscribe((response) => {
         expect(response.newStatus).toBe(LoanStatus.APPROVED);
         done();
       });

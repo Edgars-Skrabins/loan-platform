@@ -8,7 +8,6 @@ import io.github.edgarsskrabins.loan_platform.exceptions.InvalidLoanStateExcepti
 import io.github.edgarsskrabins.loan_platform.exceptions.LoanApplicationNotFoundException;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationResponse;
-import io.github.edgarsskrabins.loan_platform.loanApplication.dto.deleteLoanApplication.DeleteLoanApplicationRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.getLoanApplication.GetLoanApplicationResponse;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusResponse;
@@ -174,7 +173,7 @@ class LoanApplicationServiceTest {
             when(loanApplicationRepository.save(application)).thenReturn(application);
 
             UpdateLoanApplicationStatusResponse response = service.updateLoanApplicationStatus(
-                    new UpdateLoanApplicationStatusRequest(LOAN_ID, LoanStatus.APPROVED));
+                    LOAN_ID, new UpdateLoanApplicationStatusRequest(LoanStatus.APPROVED));
 
             assertThat(application.getStatus()).isEqualTo(LoanStatus.APPROVED);
             assertThat(response.id()).isEqualTo(LOAN_ID);
@@ -187,7 +186,7 @@ class LoanApplicationServiceTest {
             when(currentUserService.getCurrentUser()).thenReturn(user(Role.CUSTOMER));
 
             assertThatThrownBy(() -> service.updateLoanApplicationStatus(
-                    new UpdateLoanApplicationStatusRequest(LOAN_ID, LoanStatus.APPROVED)))
+                    LOAN_ID, new UpdateLoanApplicationStatusRequest(LoanStatus.APPROVED)))
                     .isInstanceOf(ForbiddenOperationException.class)
                     .hasMessage("Only admins or loan officers can update loan application status");
             verify(loanApplicationRepository, never()).save(any());
@@ -200,7 +199,7 @@ class LoanApplicationServiceTest {
             when(loanApplicationRepository.findById(404L)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.updateLoanApplicationStatus(
-                    new UpdateLoanApplicationStatusRequest(404L, LoanStatus.APPROVED)))
+                    404L, new UpdateLoanApplicationStatusRequest(LoanStatus.APPROVED)))
                     .isInstanceOf(LoanApplicationNotFoundException.class);
             verify(loanApplicationRepository, never()).save(any());
         }
@@ -213,7 +212,7 @@ class LoanApplicationServiceTest {
                     .thenReturn(Optional.of(application(LoanStatus.APPROVED)));
 
             assertThatThrownBy(() -> service.updateLoanApplicationStatus(
-                    new UpdateLoanApplicationStatusRequest(LOAN_ID, LoanStatus.PENDING)))
+                    LOAN_ID, new UpdateLoanApplicationStatusRequest(LoanStatus.PENDING)))
                     .isInstanceOf(InvalidLoanStateException.class);
             verify(loanApplicationRepository, never()).save(any());
         }
@@ -227,7 +226,7 @@ class LoanApplicationServiceTest {
             when(loanApplicationRepository.save(application)).thenReturn(application);
 
             UpdateLoanApplicationStatusResponse response = service.updateLoanApplicationStatus(
-                    new UpdateLoanApplicationStatusRequest(LOAN_ID, LoanStatus.PENDING));
+                    LOAN_ID, new UpdateLoanApplicationStatusRequest(LoanStatus.PENDING));
 
             assertThat(application.getStatus()).isEqualTo(LoanStatus.PENDING);
             assertThat(response.newStatus()).isEqualTo(LoanStatus.PENDING);
@@ -241,7 +240,7 @@ class LoanApplicationServiceTest {
                     .thenReturn(Optional.of(application(LoanStatus.IN_REVIEW)));
 
             assertThatThrownBy(() -> service.updateLoanApplicationStatus(
-                    new UpdateLoanApplicationStatusRequest(LOAN_ID, LoanStatus.PENDING)))
+                    LOAN_ID, new UpdateLoanApplicationStatusRequest(LoanStatus.PENDING)))
                     .isInstanceOf(InvalidLoanStateException.class);
             verify(loanApplicationRepository, never()).save(any());
         }
@@ -266,7 +265,7 @@ class LoanApplicationServiceTest {
             when(loanApplicationRepository.findById(LOAN_ID)).thenReturn(Optional.of(application));
             when(customerProfileService.getByUserId(USER_ID)).thenReturn(profile(PROFILE_ID));
 
-            service.deleteLoanApplication(new DeleteLoanApplicationRequest(LOAN_ID));
+            service.deleteLoanApplication(LOAN_ID);
 
             verify(loanApplicationRepository).delete(application);
         }
@@ -279,7 +278,7 @@ class LoanApplicationServiceTest {
             when(currentUserService.getCurrentUser()).thenReturn(user(role));
             when(loanApplicationRepository.findById(LOAN_ID)).thenReturn(Optional.of(application));
 
-            service.deleteLoanApplication(new DeleteLoanApplicationRequest(LOAN_ID));
+            service.deleteLoanApplication(LOAN_ID);
 
             verify(loanApplicationRepository).delete(application);
         }
@@ -293,7 +292,7 @@ class LoanApplicationServiceTest {
                     .thenReturn(Optional.of(application(status)));
             when(customerProfileService.getByUserId(USER_ID)).thenReturn(profile(PROFILE_ID));
 
-            assertThatThrownBy(() -> service.deleteLoanApplication(new DeleteLoanApplicationRequest(LOAN_ID)))
+            assertThatThrownBy(() -> service.deleteLoanApplication(LOAN_ID))
                     .isInstanceOf(InvalidLoanStateException.class)
                     .hasMessage("Only pending loan applications can be deleted");
             verify(loanApplicationRepository, never()).delete(any());
@@ -305,7 +304,7 @@ class LoanApplicationServiceTest {
             when(currentUserService.getCurrentUser()).thenReturn(user(Role.CUSTOMER));
             when(loanApplicationRepository.findById(404L)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> service.deleteLoanApplication(new DeleteLoanApplicationRequest(404L)))
+            assertThatThrownBy(() -> service.deleteLoanApplication(404L))
                     .isInstanceOf(LoanApplicationNotFoundException.class);
             verify(loanApplicationRepository, never()).delete(any());
         }
@@ -320,7 +319,7 @@ class LoanApplicationServiceTest {
                     .thenReturn(Optional.of(application(LoanStatus.PENDING)));
             when(customerProfileService.getByUserId(999L)).thenReturn(profile(222L));
 
-            assertThatThrownBy(() -> service.deleteLoanApplication(new DeleteLoanApplicationRequest(LOAN_ID)))
+            assertThatThrownBy(() -> service.deleteLoanApplication(LOAN_ID))
                     .isInstanceOf(ForbiddenOperationException.class)
                     .hasMessage("You can only delete your own loan applications");
             verify(loanApplicationRepository, never()).delete(any());

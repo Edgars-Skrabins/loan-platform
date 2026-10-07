@@ -31,17 +31,12 @@ export interface LoanApplication {
 }
 
 export interface UpdateLoanApplicationStatusRequest {
-  id: number;
   newStatus: LoanStatus;
 }
 
 export interface UpdateLoanApplicationStatusResponse {
   id: number;
   newStatus: LoanStatus;
-}
-
-export interface DeleteLoanApplicationRequest {
-  id: number;
 }
 
 export interface LoanDecision {

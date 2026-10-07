@@ -2,7 +2,6 @@ package io.github.edgarsskrabins.loan_platform.loanApplication.controller;
 
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationResponse;
-import io.github.edgarsskrabins.loan_platform.loanApplication.dto.deleteLoanApplication.DeleteLoanApplicationRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.getLoanApplication.GetLoanApplicationResponse;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusResponse;
@@ -40,17 +39,16 @@ public class LoanApplicationController {
 
     @PutMapping("/loan-application/{id}")
     public UpdateLoanApplicationStatusResponse updateLoanApplicationStatus(
+            @PathVariable Long id,
             @RequestBody @Valid UpdateLoanApplicationStatusRequest request
     ) {
-        return loanApplicationService.updateLoanApplicationStatus(request);
+        return loanApplicationService.updateLoanApplicationStatus(id, request);
     }
 
     @DeleteMapping("/loan-application/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteLoanApplication(
-            @RequestBody @Valid DeleteLoanApplicationRequest request
-    ) {
-        loanApplicationService.deleteLoanApplication(request);
+    public void deleteLoanApplication(@PathVariable Long id) {
+        loanApplicationService.deleteLoanApplication(id);
     }
 
 }

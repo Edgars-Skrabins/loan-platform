@@ -7,8 +7,7 @@ import {
   CreateLoanApplicationResponse,
   LoanApplication,
   UpdateLoanApplicationStatusRequest,
-  UpdateLoanApplicationStatusResponse,
-  DeleteLoanApplicationRequest
+  UpdateLoanApplicationStatusResponse
 } from '../models/loan.model';
 
 @Injectable({
@@ -31,12 +30,11 @@ export class LoanService {
     return this.http.get<LoanApplication>(`${this.apiUrl}/loan-application/${id}`);
   }
 
-  updateLoanApplicationStatus(request: UpdateLoanApplicationStatusRequest): Observable<UpdateLoanApplicationStatusResponse> {
-    return this.http.put<UpdateLoanApplicationStatusResponse>(`${this.apiUrl}/loan-application/${request.id}`, request);
+  updateLoanApplicationStatus(id: number, request: UpdateLoanApplicationStatusRequest): Observable<UpdateLoanApplicationStatusResponse> {
+    return this.http.put<UpdateLoanApplicationStatusResponse>(`${this.apiUrl}/loan-application/${id}`, request);
   }
 
   deleteLoanApplication(id: number): Observable<void> {
-    const request: DeleteLoanApplicationRequest = { id };
-    return this.http.delete<void>(`${this.apiUrl}/loan-application/${id}`, { body: request });
+    return this.http.delete<void>(`${this.apiUrl}/loan-application/${id}`);
   }
 }

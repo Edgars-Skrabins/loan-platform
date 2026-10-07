@@ -83,11 +83,10 @@ export class LoanDetailComponent implements OnInit, OnDestroy {
 
     this.updating = true;
     const request: UpdateLoanApplicationStatusRequest = {
-      id: this.loan.id,
       newStatus: this.statusForm.value.newStatus
     };
 
-    this.loanService.updateLoanApplicationStatus(request)
+    this.loanService.updateLoanApplicationStatus(this.loan.id, request)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {

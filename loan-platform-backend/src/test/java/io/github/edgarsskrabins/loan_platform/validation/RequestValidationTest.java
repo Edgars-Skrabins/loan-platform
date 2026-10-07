@@ -3,7 +3,6 @@ package io.github.edgarsskrabins.loan_platform.validation;
 import io.github.edgarsskrabins.loan_platform.auth.dto.login.LoginRequest;
 import io.github.edgarsskrabins.loan_platform.auth.dto.register.RegisterRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationRequest;
-import io.github.edgarsskrabins.loan_platform.loanApplication.dto.deleteLoanApplication.DeleteLoanApplicationRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.entity.LoanStatus;
 import jakarta.validation.ConstraintViolation;
@@ -96,41 +95,21 @@ class RequestValidationTest {
     }
 
     @Nested
-    @DisplayName("DeleteLoanApplicationRequest")
-    class DeleteRequest {
-
-        @Test
-        @DisplayName("accepts an id and rejects a null one")
-        void requiresId() {
-            assertThat(validator.validate(new DeleteLoanApplicationRequest(1L))).isEmpty();
-            assertThat(validator.validate(new DeleteLoanApplicationRequest(null))).hasSize(1);
-        }
-    }
-
-    @Nested
     @DisplayName("UpdateLoanApplicationStatusRequest")
     class UpdateRequest {
 
         @Test
-        @DisplayName("accepts an id plus a target status")
+        @DisplayName("accepts a target status")
         void acceptsValidInput() {
             assertThat(validator.validate(
-                    new UpdateLoanApplicationStatusRequest(1L, LoanStatus.APPROVED))).isEmpty();
-        }
-
-        @Test
-        @DisplayName("rejects a null id")
-        void requiresId() {
-            assertThat(messagesFor(validator.validate(
-                    new UpdateLoanApplicationStatusRequest(null, LoanStatus.APPROVED))))
-                    .contains("Loan application id is required");
+                    new UpdateLoanApplicationStatusRequest(LoanStatus.APPROVED))).isEmpty();
         }
 
         @Test
         @DisplayName("rejects a missing target status rather than writing null to a NOT NULL column")
         void requiresNewStatus() {
             assertThat(messagesFor(validator.validate(
-                    new UpdateLoanApplicationStatusRequest(1L, null))))
+                    new UpdateLoanApplicationStatusRequest(null))))
                     .contains("Target status is required");
         }
     }

@@ -7,7 +7,6 @@ import io.github.edgarsskrabins.loan_platform.exceptions.InvalidLoanStateExcepti
 import io.github.edgarsskrabins.loan_platform.exceptions.LoanApplicationNotFoundException;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.createLoanApplication.CreateLoanApplicationResponse;
-import io.github.edgarsskrabins.loan_platform.loanApplication.dto.deleteLoanApplication.DeleteLoanApplicationRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.getLoanApplication.GetLoanApplicationResponse;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusRequest;
 import io.github.edgarsskrabins.loan_platform.loanApplication.dto.updateLoanApplication.UpdateLoanApplicationStatusResponse;
@@ -90,14 +89,14 @@ public class LoanApplicationService {
     }
 
     @Transactional
-    public UpdateLoanApplicationStatusResponse updateLoanApplicationStatus(UpdateLoanApplicationStatusRequest request) {
+    public UpdateLoanApplicationStatusResponse updateLoanApplicationStatus(Long id, UpdateLoanApplicationStatusRequest request) {
         User currentUser = currentUserService.getCurrentUser();
         if (currentUser.getRole() == Role.CUSTOMER) {
             throw new ForbiddenOperationException(
                     "Only admins or loan officers can update loan application status");
         }
 
-        LoanApplication loanApplication = findOrThrow(request.id());
+        LoanApplication loanApplication = findOrThrow(id);
 
         if (currentUser.getRole() == Role.LOAN_OFFICER
                 && !OFFICER_ALLOWED_TRANSITIONS.getOrDefault(loanApplication.getStatus(), Set.of())
@@ -117,9 +116,9 @@ public class LoanApplicationService {
     }
 
     @Transactional
-    public void deleteLoanApplication(DeleteLoanApplicationRequest request) {
+    public void deleteLoanApplication(Long id) {
         User currentUser = currentUserService.getCurrentUser();
-        LoanApplication loanApplication = findOrThrow(request.id());
+        LoanApplication loanApplication = findOrThrow(id);
 
         if (currentUser.getRole() == Role.CUSTOMER) {
             Long callerProfileId = customerProfileService.getByUserId(currentUser.getId()).getId();
