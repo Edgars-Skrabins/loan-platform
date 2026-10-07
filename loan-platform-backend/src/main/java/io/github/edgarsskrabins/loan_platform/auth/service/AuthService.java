@@ -6,6 +6,7 @@ import io.github.edgarsskrabins.loan_platform.auth.dto.register.RegisterRequest;
 import io.github.edgarsskrabins.loan_platform.auth.dto.register.RegisterResponse;
 import io.github.edgarsskrabins.loan_platform.customer.service.CustomerProfileService;
 import io.github.edgarsskrabins.loan_platform.exceptions.EmailAlreadyInUseException;
+import io.github.edgarsskrabins.loan_platform.exceptions.UserNotFoundException;
 import io.github.edgarsskrabins.loan_platform.profile.service.ProfileSettingsService;
 import io.github.edgarsskrabins.loan_platform.security.jwt.JwtService;
 import io.github.edgarsskrabins.loan_platform.user.entity.Role;
@@ -52,7 +53,12 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
-        User user = userService.getUserByEmail(request.email());
+        User user;
+        try {
+            user = userService.getUserByEmail(request.email());
+        } catch (UserNotFoundException exception) {
+            throw new BadCredentialsException("Invalid credentials");
+        }
 
         if (!passwordEncoder.matches(
                 request.password(),

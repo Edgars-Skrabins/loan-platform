@@ -159,13 +159,14 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("login on an unknown email never reaches the password check")
-    void loginPropagatesUnknownUser() {
+    @DisplayName("login on an unknown email never reaches the password check and doesn't leak that the email is unregistered")
+    void loginRejectsUnknownUserWithoutLeakingItsExistence() {
         when(userService.getUserByEmail("nobody@example.com"))
                 .thenThrow(new UserNotFoundException("nobody@example.com"));
 
         assertThatThrownBy(() -> authService.login(new LoginRequest("nobody@example.com", RAW_PASSWORD)))
-                .isInstanceOf(UserNotFoundException.class);
+                .isInstanceOf(BadCredentialsException.class)
+                .hasMessage("Invalid credentials");
         verifyNoInteractions(passwordEncoder, jwtService);
     }
 
